@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
-
 class GameConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'game'
+    name = 'ai_dungeon_master.apps.game'
+    verbose_name = 'Game'
