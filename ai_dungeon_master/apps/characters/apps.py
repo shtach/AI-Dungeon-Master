@@ -3,4 +3,5 @@ from django.apps import AppConfig
 
 class CharactersConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'characters'
+    name = 'ai_dungeon_master.apps.characters'
+    verbose_name = 'Characters'
