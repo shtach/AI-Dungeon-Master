@@ -47,7 +47,7 @@ MIDDLEWARE = [
     "django_htmx.middleware.HtmxMiddleware",
 ]
 
-ROOT_URLCONF = "ai_dungeon_master.urls"
+ROOT_URLCONF = "ai_dungeon_master.config.urls"
 WSGI_APPLICATION = "ai_dungeon_master.wsgi.application"
 
 TEMPLATES = [
