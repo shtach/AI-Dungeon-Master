@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Register — AI Dungeon Master{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-sm bg-dm-surface border border-dm-muted/20 rounded-xl p-8">
+        <h1 class="text-2xl font-bold text-dm-accent mb-6 text-center">Register</h1>
+        <form method="post" class="flex flex-col gap-4">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-dm-muted uppercase tracking-wide">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                <p class="text-xs text-red-400">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit"
+                    class="mt-2 bg-dm-accent text-dm-bg font-semibold py-2 rounded-lg hover:opacity-90 transition-opacity">
+                Create account
+            </button>
+        </form>
+        <p class="text-center text-sm text-dm-muted mt-4">
+            Already have an account?
+            <a href="{% url 'accounts:login' %}" class="text-dm-accent hover:underline">Login</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
