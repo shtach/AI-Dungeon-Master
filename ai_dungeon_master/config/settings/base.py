@@ -1,103 +1,104 @@
 import os
 from pathlib import Path
 
-# BASE_DIR — это корень проекта (папка AI-Dungeon-Master)
-# __file__ = .../ai_dungeon_master/config/settings/base.py
-# .parent = settings/
-# .parent.parent = config/
-# .parent.parent.parent = ai_dungeon_master/
-# .parent.parent.parent.parent = AI-Dungeon-Master/ это и есть BASE_DIR
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
-# Секретный ключ берём из .env файла (Для Лёхи)
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-insecure-key-change-in-production')
+load_dotenv(BASE_DIR / ".env")
 
-DEBUG = True
 
-ALLOWED_HOSTS = []
+def get_env(var_name: str, default=None) -> str:
+    value = os.environ.get(var_name, default)
+    if value is None:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(f"Set the {var_name} environment variable")
+    return value
 
-# Все установленные приложения
+
+SECRET_KEY = get_env("DJANGO_SECRET_KEY", default="insecure-base-placeholder-override-in-each-env")
+ALLOWED_HOSTS = get_env("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
 INSTALLED_APPS = [
-    # Django встроенные
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    # Наши приложения
-    'ai_dungeon_master.apps.accounts',
-    'ai_dungeon_master.apps.characters',
-    'ai_dungeon_master.apps.game',
-    'ai_dungeon_master.apps.world',
-    'ai_dungeon_master.apps.core',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "tailwind",
+    "theme",
+    "django_htmx",
+    "ai_dungeon_master.apps.accounts",
+    "ai_dungeon_master.apps.characters",
+    "ai_dungeon_master.apps.game",
+    "ai_dungeon_master.apps.world",
+    "ai_dungeon_master.apps.core",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
-# Указываем где лежит главный urls.py
-ROOT_URLCONF = 'ai_dungeon_master.config.urls'
+ROOT_URLCONF = "ai_dungeon_master.urls"
+WSGI_APPLICATION = "ai_dungeon_master.wsgi.application"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # BASE_DIR / 'templates' — это папка templates/ в корне проекта
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'ai_dungeon_master.wsgi.application'
-
-# База данных — берём из .env
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'game_db'),
-        'USER': os.environ.get('DB_USER', 'pgadmin'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'zaq12wsx'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": get_env("DB_NAME", "game_db"),
+        "USER": get_env("DB_USER", "pgadmin"),
+        "PASSWORD": get_env("DB_PASSWORD", ""),
+        "HOST": get_env("DB_HOST", "localhost"),
+        "PORT": get_env("DB_PORT", "5432"),
     }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Статика (CSS, JS, картинки)
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+TAILWIND_APP_NAME = "theme"
 
-# Куда редиректить после логина/логаута
-LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/accounts/login/'
+ANTHROPIC_API_KEY = get_env("ANTHROPIC_API_KEY", "")
+ANTHROPIC_MODEL = "claude-opus-4-6"
+ANTHROPIC_MAX_TOKENS = 1024
 
-# Anthropic API ключ (будет нужен позже)
-ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

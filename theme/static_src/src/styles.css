@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/**
+ * Source paths — Tailwind scans these for class names to include in CSS.
+ */
+@source "../../../**/*.{html,py,js}";
+
+/**
+ * AI Dungeon Master custom color palette (Tailwind v4 @theme).
+ * Use as: bg-dm-bg, text-dm-accent, border-dm-muted, etc.
+ */
+@theme {
+    --color-dm-bg:      #0d0d14;   /* Page background — very dark navy */
+    --color-dm-surface: #161622;   /* Cards, panels */
+    --color-dm-accent:  #a78bfa;   /* Purple accent — primary interactive */
+    --color-dm-text:    #e2e8f0;   /* Main text — light slate */
+    --color-dm-muted:   #64748b;   /* Secondary text, borders */
+}
+
+@theme {
+    --font-family-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-family-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* Django form inputs — global style */
+@layer base {
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"],
+    textarea,
+    select {
+        width: 100%;
+        background-color: var(--color-dm-bg);
+        color: var(--color-dm-text);
+        border: 1px solid color-mix(in srgb, var(--color-dm-muted) 40%, transparent);
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        outline: none;
+    }
+    input:focus,
+    textarea:focus,
+    select:focus {
+        border-color: var(--color-dm-accent);
+    }
+}
