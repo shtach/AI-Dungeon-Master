@@ -1,0 +1,36 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Dungeon Master{% endblock %}</title>
+
+    {% tailwind_css %}
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="h-full bg-dm-bg text-dm-text font-sans">
+
+    {% block content %}{% endblock %}
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"
+            integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
+            crossorigin="anonymous"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- CSRF token for HTMX POST requests -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.body.addEventListener("htmx:configRequest", function (evt) {
+                evt.detail.headers["X-CSRFToken"] = "{{ csrf_token }}";
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
