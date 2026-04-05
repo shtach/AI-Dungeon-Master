@@ -48,7 +48,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "ai_dungeon_master.config.urls"
-WSGI_APPLICATION = "ai_dungeon_master.config.wsgi.application"
+WSGI_APPLICATION = "ai_dungeon_master.wsgi.application"
 
 TEMPLATES = [
     {

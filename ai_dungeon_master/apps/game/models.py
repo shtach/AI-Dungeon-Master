@@ -27,3 +27,28 @@ class GameSession(models.Model):
 
     def __str__(self):
         return f"Session: {self.character.name} in {self.world.name} ({self.status})"
+
+
+class Message(models.Model):
+    class RoleChoices(models.TextChoices):
+        USER = 'USER', 'User'
+        ASSISTANT = 'ASSISTANT', 'Assistant'
+        SYSTEM = 'SYSTEM', 'System'
+
+    session = models.ForeignKey(GameSession, on_delete=models.CASCADE, related_name='messages')
+    role = models.CharField(max_length=20, choices=RoleChoices.choices)
+
+    content = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.get_role_display()}] {self.content[:30]}..."
+
+class DiceRoll(models.Model):
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='dice_rolls')
+    dice_type = models.CharField(max_length=10, default='d20')
+    result = models.IntegerField()
+
+    def __str__(self):
+        return f"Rolled {self.dice_type}: {self.result}"
