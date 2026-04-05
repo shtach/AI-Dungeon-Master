@@ -48,7 +48,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "ai_dungeon_master.config.urls"
-WSGI_APPLICATION = "ai_dungeon_master.wsgi.application"
+WSGI_APPLICATION = "ai_dungeon_master.config.wsgi.application"
 
 TEMPLATES = [
     {
@@ -97,8 +97,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 TAILWIND_APP_NAME = "theme"
 
-ANTHROPIC_API_KEY = get_env("ANTHROPIC_API_KEY", "")
-ANTHROPIC_MODEL = "claude-opus-4-6"
-ANTHROPIC_MAX_TOKENS = 1024
+GEMINI_API_KEY = get_env("GEMINI_API_KEY", "")
+GEMINI_MODEL = "gemini-1.5-pro-latest" # Или другую модель потом выберем
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
