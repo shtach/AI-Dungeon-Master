@@ -6,9 +6,9 @@
 <div class="min-h-screen flex flex-col items-center justify-center gap-6">
     <h1 class="text-4xl font-bold text-dm-accent">AI Dungeon Master</h1>
     <p class="text-dm-muted">Welcome, {{ request.user.username }}</p>
-    <a href="{% url 'accounts:logout' %}"
-       class="text-sm text-dm-muted hover:text-dm-text">
-        Logout
-    </a>
+    <form action="{% url 'accounts:logout' %}" method="post" class="inline">
+    {% csrf_token %}
+    <button type="submit" class="text-blue-500 hover:underline">Logout</button>
+</form>
 </div>
 {% endblock %}
