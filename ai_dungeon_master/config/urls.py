@@ -6,6 +6,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("ai_dungeon_master.apps.accounts.urls")),
     path("", include("ai_dungeon_master.apps.game.urls")),
+    path("characters/", include("ai_dungeon_master.apps.characters.urls")),
 ]
 
 if settings.DEBUG:
