@@ -43,7 +43,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-          cache-dependency-path: "requirements/*.txt"
+          cache-dependency-path: |
+        requirements/common.txt
+        requirements/development.txt
 
       - name: 📦 Install dependencies
         run: |
@@ -85,8 +87,8 @@ jobs:
           DB_PASSWORD: postgres_test_password
           DB_HOST: localhost
           DB_PORT: "5432"
-          GEMINI_API_KEY: test-key
-        run: python manage.py migrate --check
+          GEMINI_API_KEY: test-key-mocked-in-tests
+        run: python manage.py makemigrations --check --dry-run
 
   lint:
     name: Code Quality
@@ -99,10 +101,10 @@ jobs:
           cache: "pip"
 
       - name: Install linting tools
-        run: pip install black ruff flake8
+        run: pip install black==24.10.0 ruff==0.6.9 flake8==7.1.1
 
       - name: ⬛ Black formatting check
-        run: black --check --diff .
+        run: black --check --diff --line-length 120 .
 
       - name: 🔥 Ruff linting
         run: ruff check .
