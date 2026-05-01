@@ -3,14 +3,11 @@ from django.contrib.auth.forms import UserCreationForm
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
 
-
 class CustomLoginView(LoginView):
     template_name = "accounts/login.html"
 
-
 class CustomLogoutView(LogoutView):
-    pass
-
+    next_page = reverse_lazy("accounts:login")
 
 class RegisterView(CreateView):
     form_class = UserCreationForm
