@@ -1,0 +1,6 @@
+
+line-length = 120
+
+[lint.per-file-ignores]
+"ai_dungeon_master/config/settings/*.py" = ["F403", "F405"]
+"**/migrations/*.py" = ["E501"]

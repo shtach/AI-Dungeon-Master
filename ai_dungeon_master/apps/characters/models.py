@@ -3,25 +3,30 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
 class Character(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='characters')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="characters")
 
     name = models.CharField(max_length=100)
 
     class RaceChoices(models.TextChoices):
-        HUMAN = 'HUMAN', 'Human'
-        ELF = 'ELF', 'Elf'
-        DWARF = 'DWARF', 'Dwarf'
-        ORC = 'ORC', 'Orc'
+        HUMAN = "HUMAN", "Human"
+        ELF = "ELF", "Elf"
+        DWARF = "DWARF", "Dwarf"
+        ORC = "ORC", "Orc"
 
     class ClassChoices(models.TextChoices):
-        WARRIOR = 'WARRIOR', 'Warrior'
-        WIZARD = 'WIZARD', 'Wizard'
-        ROGUE = 'ROGUE', 'Rogue'
-        CLERIC = 'CLERIC', 'Cleric'
+        WARRIOR = "WARRIOR", "Warrior"
+        WIZARD = "WIZARD", "Wizard"
+        ROGUE = "ROGUE", "Rogue"
+        CLERIC = "CLERIC", "Cleric"
 
-    race = models.CharField(max_length=20, choices=RaceChoices.choices, default=RaceChoices.HUMAN)
-    character_class = models.CharField(max_length=20, choices=ClassChoices.choices, default=ClassChoices.WARRIOR)
+    race = models.CharField(
+        max_length=20, choices=RaceChoices.choices, default=RaceChoices.HUMAN
+    )
+    character_class = models.CharField(
+        max_length=20, choices=ClassChoices.choices, default=ClassChoices.WARRIOR
+    )
 
     strength = models.IntegerField(default=10)
     dexterity = models.IntegerField(default=10)
@@ -46,7 +51,9 @@ class Character(models.Model):
 
 
 class InventoryItem(models.Model):
-    character = models.ForeignKey(Character, on_delete=models.CASCADE, related_name='inventory')
+    character = models.ForeignKey(
+        Character, on_delete=models.CASCADE, related_name="inventory"
+    )
     name = models.CharField(max_length=100)
     item_type = models.CharField(max_length=50)
     damage = models.CharField(max_length=20, null=True, blank=True)

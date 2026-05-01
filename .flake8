@@ -1,0 +1,7 @@
+[flake8]
+max-line-length = 120
+extend-ignore = E203, W503
+per-file-ignores =
+    */migrations/*.py: E501
+    ai_dungeon_master/config/settings/*.py: F403, F405
+    manage.py: E501
