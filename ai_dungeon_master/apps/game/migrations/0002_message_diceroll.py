@@ -7,27 +7,67 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('game', '0001_initial'),
+        ("game", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Message',
+            name="Message",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('role', models.CharField(choices=[('USER', 'User'), ('ASSISTANT', 'Assistant'), ('SYSTEM', 'System')], max_length=20)),
-                ('content', models.TextField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='game.gamesession')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "role",
+                    models.CharField(
+                        choices=[
+                            ("USER", "User"),
+                            ("ASSISTANT", "Assistant"),
+                            ("SYSTEM", "System"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("content", models.TextField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "session",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="messages",
+                        to="game.gamesession",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='DiceRoll',
+            name="DiceRoll",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('dice_type', models.CharField(default='d20', max_length=10)),
-                ('result', models.IntegerField()),
-                ('message', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='dice_rolls', to='game.message')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("dice_type", models.CharField(default="d20", max_length=10)),
+                ("result", models.IntegerField()),
+                (
+                    "message",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="dice_rolls",
+                        to="game.message",
+                    ),
+                ),
             ],
         ),
     ]

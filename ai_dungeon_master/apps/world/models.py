@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class WorldSetting(models.Model):
     name = models.CharField(max_length=100)
 
@@ -12,7 +13,9 @@ class WorldSetting(models.Model):
 
 
 class Scenario(models.Model):
-    world = models.ForeignKey(WorldSetting, on_delete=models.CASCADE, related_name='scenarios')
+    world = models.ForeignKey(
+        WorldSetting, on_delete=models.CASCADE, related_name="scenarios"
+    )
 
     title = models.CharField(max_length=200)
 

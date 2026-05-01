@@ -12,11 +12,14 @@ def get_env(var_name: str, default=None) -> str:
     value = os.environ.get(var_name, default)
     if value is None:
         from django.core.exceptions import ImproperlyConfigured
+
         raise ImproperlyConfigured(f"Set the {var_name} environment variable")
     return value
 
 
-SECRET_KEY = get_env("DJANGO_SECRET_KEY", default="insecure-base-placeholder-override-in-each-env")
+SECRET_KEY = get_env(
+    "DJANGO_SECRET_KEY", default="insecure-base-placeholder-override-in-each-env"
+)
 ALLOWED_HOSTS = get_env("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 INSTALLED_APPS = [
@@ -77,7 +80,9 @@ DATABASES = {
 }
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -98,6 +103,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 TAILWIND_APP_NAME = "theme"
 
 GEMINI_API_KEY = get_env("GEMINI_API_KEY", "")
-GEMINI_MODEL = "gemini-1.5-pro-latest" # Или другую модель потом выберем
+GEMINI_MODEL = "gemini-1.5-pro-latest"  # Или другую модель потом выберем
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
