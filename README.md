@@ -343,7 +343,6 @@ AI-Dungeon-Master/
 │           ├── base.py         # Common settings
 │           ├── development.py  # Local dev (DEBUG=True, PostgreSQL)
 │           └── production.py   # Production (DEBUG=False, SSL)
-├── ai/                     # Gemini AI client
 ├── theme/                  # Tailwind CSS app
 ├── templates/              # Django HTML templates
 ├── static/                 # Static files (JS, images)
