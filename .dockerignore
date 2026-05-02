@@ -1,0 +1,51 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Django
+staticfiles/
+media/
+local_db/
+*.log
+db.sqlite3
+
+# Tailwind build output
+theme/static/css/dist/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.idea/
+.vscode/
+
+# Docker (no need to copy into image)
+.dockerignore
+docker-compose.yml
+
+# CI/CD
+.github/
+ci.yml
+
+# Docs
+docs/
+
+# Tests / coverage
+htmlcov/
+.coverage
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets (just in case)
+.env
