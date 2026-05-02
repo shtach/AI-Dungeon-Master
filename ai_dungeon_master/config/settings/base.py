@@ -106,3 +106,57 @@ GEMINI_API_KEY = get_env("GEMINI_API_KEY", "")
 GEMINI_MODEL = "gemini-1.5-pro-latest"  # Или другую модель потом выберем
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ==========================================
+# LOGGING
+# ==========================================
+LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{asctime}] {levelname} {name} {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "simple": {
+            "format": "{levelname} {name}: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "file_ai": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOGS_DIR / "ai.log",
+            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+        "file_game": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOGS_DIR / "game.log",
+            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "ai_dungeon_master.apps.ai": {
+            "handlers": ["console", "file_ai"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "ai_dungeon_master.apps.game": {
+            "handlers": ["console", "file_game"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
+}
