@@ -1,0 +1,14 @@
+# Force LF line endings for all text files in repo
+# Prevents Windows CRLF issues with Docker, shell scripts, etc.
+* text=auto eol=lf
+
+# Binary files — never touch them
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
