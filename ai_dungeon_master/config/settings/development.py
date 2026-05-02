@@ -23,15 +23,16 @@ MIDDLEWARE += [
 
 INTERNAL_IPS = ["127.0.0.1"]
 
-# Show SQL queries in console
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "loggers": {
-        "django.db.backends": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-        }
-    },
+# Show logs
+LOGGING["handlers"]["console_verbose"] = {
+    "class": "logging.StreamHandler",
+    "formatter": "verbose",
 }
+LOGGING["loggers"]["django.db.backends"] = {
+    "handlers": ["console_verbose"],
+    "level": "DEBUG",
+    "propagate": False,
+}
+
+LOGGING["loggers"]["ai_dungeon_master.apps.ai"]["level"] = "DEBUG"
+LOGGING["loggers"]["ai_dungeon_master.apps.game"]["level"] = "DEBUG"
