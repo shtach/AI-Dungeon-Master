@@ -1,18 +1,101 @@
 # AI Dungeon Master
 
-A text-based RPG powered by Django and Claude AI. Play D&D 5e with an AI Dungeon Master in your browser.
+A text-based RPG powered by Django and Gemini AI. Play D&D 5e with an AI Dungeon Master in your browser.
 
-**Stack:** Django 5 · Tailwind CSS v4 · HTMX · Alpine.js · Claude API · PostgreSQL
+**Stack:** Django 5 · Tailwind CSS v4 · HTMX · Alpine.js · Gemini API · PostgreSQL
 
 ---
 
-## Requirements
+## Quick Start — Docker (recommended)
 
-| Dependency | Arch Linux | Windows |
-|---|---|---|
-| Python 3.12+ | `sudo pacman -S python` | [python.org](https://www.python.org/downloads/) — check "Add to PATH" |
-| Git | `sudo pacman -S git` | [git-scm.com](https://git-scm.com/download/win) |
-| PostgreSQL 15+ | `sudo pacman -S postgresql` | [postgresql.org](https://www.postgresql.org/download/windows/) |
+The fastest way to run the project locally. Only [Docker Desktop](https://www.docker.com/products/docker-desktop/) required — no Python, PostgreSQL, or Node.js installation needed.
+
+### 1. Clone the repository
+
+```bash
+git clone git@github.com:shtach/AI-Dungeon-Master.git
+cd AI-Dungeon-Master
+```
+
+### 2. Configure environment variables
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and fill in the required fields:
+
+```env
+DJANGO_SECRET_KEY=your-50-character-random-key   # python -c "import secrets; print(secrets.token_urlsafe(50))"
+DB_PASSWORD=any-local-password-you-choose
+GEMINI_API_KEY=your-gemini-api-key-here          # https://aistudio.google.com/app/apikey
+```
+
+> `DB_HOST` does not need to be changed — Docker Compose sets it automatically.
+
+### 3. Start the project
+
+```bash
+docker compose up
+```
+
+Docker will automatically:
+- build the Python image
+- start PostgreSQL and wait until it is ready
+- run `migrate`
+- start Django at [http://localhost:8000](http://localhost:8000)
+- start the Tailwind CSS watcher
+
+First build takes ~2 minutes. Subsequent starts are near-instant.
+
+### 4. (Optional) Create a superuser
+
+In a separate terminal while containers are running:
+
+```bash
+docker compose exec web python manage.py createsuperuser
+```
+
+Then open [http://localhost:8000/admin](http://localhost:8000/admin).
+
+### Useful commands
+
+```bash
+# Run in background
+docker compose up -d
+
+# View logs
+docker compose logs -f web
+
+# Stop containers
+docker compose down
+
+# Stop and wipe the database (full reset)
+docker compose down -v
+
+# Open Django shell
+docker compose exec web python manage.py shell
+
+# Run tests
+docker compose exec web python manage.py test --verbosity=2
+
+# Create migrations after model changes
+docker compose exec web python manage.py makemigrations
+docker compose exec web python manage.py migrate
+
+# Rebuild image after changing requirements
+docker compose build
+```
+
+---
+
+## Manual Setup — Requirements
+
+| Dependency     | Arch Linux                  | Windows                                                                |
+| -------------- | --------------------------- | ---------------------------------------------------------------------- |
+| Python 3.12+   | `sudo pacman -S python`     | [python.org](https://www.python.org/downloads/) — check "Add to PATH" |
+| Git            | `sudo pacman -S git`        | [git-scm.com](https://git-scm.com/download/win)                        |
+| PostgreSQL 15+ | `sudo pacman -S postgresql` | [postgresql.org](https://www.postgresql.org/download/windows/)         |
 
 ---
 
@@ -67,8 +150,8 @@ cp .env.example .env
 
 Open `.env` and fill in the values:
 
-```bash
-DJANGO_SECRET_KEY=your-50-character-random-key  # generate: python -c "import secrets; print(secrets.token_urlsafe(50))"
+```env
+DJANGO_SECRET_KEY=your-50-character-random-key  # python -c "import secrets; print(secrets.token_urlsafe(50))"
 DJANGO_SETTINGS_MODULE=ai_dungeon_master.config.settings.development
 
 DB_NAME=game_db
@@ -77,7 +160,7 @@ DB_PASSWORD=your_password
 DB_HOST=localhost
 DB_PORT=5432
 
-ANTHROPIC_API_KEY=sk-ant-api03-your-key-here    # get at: https://console.anthropic.com/
+GEMINI_API_KEY=your-gemini-api-key-here    # https://aistudio.google.com/app/apikey
 ```
 
 ### 6. Install Tailwind CSS
@@ -165,7 +248,7 @@ copy .env.example .env
 
 Open `.env` in a text editor and fill in the values:
 
-```
+```env
 DJANGO_SECRET_KEY=your-50-character-random-key
 DJANGO_SETTINGS_MODULE=ai_dungeon_master.config.settings.development
 
@@ -175,7 +258,7 @@ DB_PASSWORD=your_password
 DB_HOST=localhost
 DB_PORT=5432
 
-ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
+GEMINI_API_KEY=your-gemini-api-key-here
 ```
 
 To generate a secret key in PowerShell:
@@ -260,7 +343,7 @@ AI-Dungeon-Master/
 │           ├── base.py         # Common settings
 │           ├── development.py  # Local dev (DEBUG=True, PostgreSQL)
 │           └── production.py   # Production (DEBUG=False, SSL)
-├── ai/                     # Claude AI client
+├── ai/                     # Gemini AI client
 ├── theme/                  # Tailwind CSS app
 ├── templates/              # Django HTML templates
 ├── static/                 # Static files (JS, images)
@@ -322,7 +405,7 @@ main       ← production (merged from develop via PR only)
 develop    ← main development branch (all PRs target here)
   │
   ├── feature/DEV-A/character-models
-  ├── feature/DEV-B/anthropic-client
+  ├── feature/DEV-B/gemini-client
   ├── feature/DEV-C/game-screen
   └── fix/DEV-A/dice-negative-rolls
 ```
@@ -350,10 +433,10 @@ Types:
   chore     dependencies, CI, config
 
 Examples:
-  feat(game): add SendMessageView with Claude integration
+  feat(game): add SendMessageView with Gemini integration
   feat(characters): implement 4-step character creation wizard
   fix(dice): handle negative modifiers in breakdown string
-  docs: update README with local setup instructions
+  docs: update README with Docker quick start
   chore: add flake8 config to .flake8
 ```
 
