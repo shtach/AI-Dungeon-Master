@@ -103,7 +103,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 TAILWIND_APP_NAME = "theme"
 
 GEMINI_API_KEY = get_env("GEMINI_API_KEY", "")
-GEMINI_MODEL = "gemini-1.5-pro-latest"  # Или другую модель потом выберем
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite")
+AI_PROVIDER = os.environ.get("AI_PROVIDER", "gemini")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
