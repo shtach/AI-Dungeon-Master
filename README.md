@@ -2,9 +2,15 @@
 
 A text-based RPG powered by Django and Gemini AI. Play D&D 5e with an AI Dungeon Master in your browser.
 
-**Stack:** Django 5 · Tailwind CSS v4 · HTMX · Alpine.js · Gemini API · PostgreSQL
+## Stack
 
----
+![Django](https://img.shields.io/badge/Django-5-092E20?style=for-the-badge&logo=django)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?style=for-the-badge&logo=tailwind-css)
+![HTMX](https://img.shields.io/badge/HTMX-Enabled-3366CC?style=for-the-badge)
+![Alpine.js](https://img.shields.io/badge/Alpine.js-Lightweight-8BC0D0?style=for-the-badge)
+![Gemini](https://img.shields.io/badge/Gemini-AI-4285F4?style=for-the-badge&logo=google)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?style=for-the-badge&logo=postgresql)
+
 
 ## Quick Start — Docker (recommended)
 
@@ -25,11 +31,6 @@ cp .env.example .env
 
 Open `.env` and fill in the required fields:
 
-```env
-DJANGO_SECRET_KEY=your-50-character-random-key   # python -c "import secrets; print(secrets.token_urlsafe(50))"
-DB_PASSWORD=any-local-password-you-choose
-GEMINI_API_KEY=your-gemini-api-key-here          # https://aistudio.google.com/app/apikey
-```
 
 > `DB_HOST` does not need to be changed — Docker Compose sets it automatically.
 
@@ -119,7 +120,7 @@ sudo -u postgres psql -c "CREATE DATABASE game_db OWNER pgadmin;"
 ### 2. Clone the repository
 
 ```bash
-git clone git@github.com:shtach/AI-Dungeon-Master.git
+https://github.com/shtach/AI-Dungeon-Master.git
 cd AI-Dungeon-Master
 ```
 
@@ -151,16 +152,17 @@ cp .env.example .env
 Open `.env` and fill in the values:
 
 ```env
-DJANGO_SECRET_KEY=your-50-character-random-key  # python -c "import secrets; print(secrets.token_urlsafe(50))"
+DJANGO_SECRET_KEY=your-50-character-random-key
 DJANGO_SETTINGS_MODULE=ai_dungeon_master.config.settings.development
+
+# Generate secret key
+python -c "import secrets; print(secrets.token_urlsafe(50))"
 
 DB_NAME=game_db
 DB_USER=pgadmin
 DB_PASSWORD=your_password
 DB_HOST=localhost
 DB_PORT=5432
-
-GEMINI_API_KEY=your-gemini-api-key-here    # https://aistudio.google.com/app/apikey
 ```
 
 ### 6. Install Tailwind CSS
@@ -223,7 +225,7 @@ CREATE DATABASE game_db OWNER pgadmin;
 Open **Git Bash** or **PowerShell**:
 
 ```powershell
-git clone git@github.com:shtach/AI-Dungeon-Master.git
+https://github.com/shtach/AI-Dungeon-Master.git
 cd AI-Dungeon-Master
 ```
 
@@ -252,13 +254,14 @@ Open `.env` in a text editor and fill in the values:
 DJANGO_SECRET_KEY=your-50-character-random-key
 DJANGO_SETTINGS_MODULE=ai_dungeon_master.config.settings.development
 
+# Generate secret key
+python -c "import secrets; print(secrets.token_urlsafe(50))"
+
 DB_NAME=game_db
 DB_USER=pgadmin
 DB_PASSWORD=your_password
 DB_HOST=localhost
 DB_PORT=5432
-
-GEMINI_API_KEY=your-gemini-api-key-here
 ```
 
 To generate a secret key in PowerShell:
@@ -318,12 +321,47 @@ and uncomment the SQLite block:
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "local_db" / "db.sqlite3",
+        "NAME": "BASE_DIR" or "local_db" or "db.sqlite3",
     }
 }
 ```
 
 Then run `python manage.py migrate` — no database server needed.
+
+---
+
+## AI Provider setup
+
+Our project is designed to support a wide range of AI agents, including models like Google Gemini.
+
+### Get a free API key
+
+1. Go to [aistudio.google.com](https://aistudio.google.com)
+2. Sign in with your Google account
+3. Left panel → **Get API Key** → **Create API key**
+4. Copy the key
+
+The free tier is sufficient for local development — no credit card required.
+
+### Configure locally
+
+Add to your `.env` file:
+
+```env
+GEMINI_API_KEY=your-key-here
+AI_PROVIDER=gemini
+GEMINI_MODEL=gemini-2.5-flash-lite
+```
+
+### Switch to mock provider (no API key needed)
+
+Set in `.env`:
+
+```env
+AI_PROVIDER=mock
+```
+
+Useful for running tests or working offline.
 
 ---
 
@@ -336,6 +374,7 @@ AI-Dungeon-Master/
 │   │   ├── accounts/       # Auth — login, register, profile
 │   │   ├── characters/     # D&D character system
 │   │   ├── game/           # Core game engine
+│   │   ├── ai/             # LLM client
 │   │   ├── world/          # World settings & scenarios
 │   │   └── core/           # Shared utilities
 │   └── config/
@@ -412,9 +451,11 @@ develop    ← main development branch (all PRs target here)
 ### Branch naming
 
 ```bash
-feature/DEV-{A|B|C|D}/{short-description}   # new feature
-fix/DEV-{A|B|C|D}/{short-description}        # bug fix
-hotfix/{short-description}                   # critical fix directly to main
+feature/DEV-{X}/{short-description}   # new feature
+fix/DEV-{X}/{short-description}       # bug fix
+hotfix/{short-description}            # critical fix directly to main
+
+# X is number of issue
 ```
 
 ### Commit convention
