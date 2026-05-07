@@ -4,14 +4,156 @@
 
 {% block content %}
 <div class="min-h-screen flex flex-col items-center justify-center gap-6">
-    <h1 class="text-4xl font-bold text-dm-accent">AI Dungeon Master</h1>
-    <p class="text-dm-muted">Welcome, {{ request.user.username }}</p>
-    {% for character in characters %}
-    <p>Name: {{ character.name }}, Class: {{ character.character_class }}</p>
-    {% endfor %}
-    <form action="{% url 'accounts:logout' %}" method="post" class="inline">
-    {% csrf_token %}
-    <button type="submit" class="text-blue-500 hover:underline">Logout</button>
-</form>
+   
+    <div class="max-w-7xl mx-auto px-6 py-10">
+
+        <!-- HEADER -->
+        <div class="flex items-center justify-between mb-10">
+
+            <div>
+
+                <h1 class="text-4xl font-bold text-dm-accent">
+                    AI Dungeon Master
+                </h1>
+
+                <p class="text-dm-muted mt-2">
+                    Welcome, {{ request.user.username }}
+                </p>
+
+            </div>
+
+            <!-- CREATE CHARACTER -->
+            <a
+                href="{% url 'characters:create_step1' %}"
+                class="bg-dm-accent text-black px-6 py-3 rounded-2xl font-semibold hover:opacity-90 transition"
+            >
+                Create Character
+            </a>
+
+        </div>
+
+        <!-- CHARACTER LIST -->
+        {% if characters %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+                {% for character in characters %}
+
+                    <div class="bg-dm-surface rounded-2xl p-6 border border-white/5 shadow-lg">
+
+                        <!-- NAME -->
+                        <div class="mb-4">
+
+                            <h2 class="text-2xl font-bold text-dm-text">
+                                {{ character.name }}
+                            </h2>
+
+                            <p class="text-dm-muted">
+                                {{ character.character_class }}
+                            </p>
+
+                        </div>
+
+                        <!-- LEVEL -->
+                        <div class="mb-4">
+
+                            <p class="text-sm text-dm-muted">
+                                Level
+                            </p>
+
+                            <p class="text-lg font-semibold text-dm-text">
+                                {{ character.level }}
+                            </p>
+
+                        </div>
+
+                        <!-- HP -->
+                        <div class="mb-6">
+
+                            <div class="flex justify-between mb-2 text-sm">
+
+                                <span class="text-dm-muted">
+                                    HP
+                                </span>
+
+                                <span class="text-dm-text">
+                                    {{ character.hp_current }}/{{ character.hp_max }}
+                                </span>
+
+                            </div>
+
+                            <div class="w-full h-3 bg-zinc-800 rounded-full overflow-hidden">
+
+                                <div
+                                    class="h-full bg-green-500"
+                                    style="width: 75%;"
+                                ></div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- BUTTON -->
+                        <a
+                            href="#"
+                            class="block w-full text-center bg-dm-accent text-black py-3 rounded-xl font-semibold hover:opacity-90 transition"
+                        >
+                            New Game
+                        </a>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <!-- EMPTY STATE -->
+            <div class="bg-dm-surface rounded-2xl border border-dashed border-white/10 p-14 text-center">
+
+                <h2 class="text-3xl font-bold text-dm-text mb-3">
+                    No characters yet
+                </h2>
+
+                <p class="text-dm-muted mb-8">
+                    Create your first adventurer to begin your journey.
+                </p>
+
+                <a
+                    href="{% url 'characters:create_step1' %}"
+                    class="inline-flex bg-dm-accent text-black px-6 py-3 rounded-2xl font-semibold hover:opacity-90 transition"
+                >
+                    Create Character
+                </a>
+
+            </div>
+
+        {% endif %}
+
+        <!-- LOGOUT -->
+        <div class="mt-10">
+
+            <form action="{% url 'accounts:logout' %}" method="post">
+
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="text-dm-muted hover:text-dm-text transition"
+                >
+                    Logout
+                </button>
+
+            </form>
+
+        </div>
+
+</div>
+
 </div>
 {% endblock %}
+
+
+
+
