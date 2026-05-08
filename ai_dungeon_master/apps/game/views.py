@@ -1,8 +1,12 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
+from django.shortcuts import get_object_or_404, render
+from django.views import View
+from ai_dungeon_master.apps.game.models import GameSession, Message
 
 from ai_dungeon_master.apps.characters.models import Character
 from ai_dungeon_master.apps.world.models import WorldSetting
+from ai_dungeon_master.apps.ai.client import get_ai_client
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -14,3 +18,29 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['worlds'] = WorldSetting.objects.all()
 
         return context
+
+
+class SendMessageView(LoginRequiredMixin, View):
+    def post(self, request, session_id):
+        session = get_object_or_404(GameSession, id=session_id, user=request.user)
+        user_text = request.POST.get("message", "").strip()
+        if not user_text:
+            return render(request, "game/_messages.html", {"new_messages": []})
+
+        user_msg = Message.objects.create(
+            session=session,
+            role=Message.RoleChoices.USER,
+            content=user_text
+        )
+
+        ai_client = get_ai_client()
+        ai_response_text = ai_client.generate(user_text)
+        ai_msg = Message.objects.create(
+            session=session,
+            role=Message.RoleChoices.ASSISTANT,
+            content=ai_response_text
+        )
+
+        return render(request, "game/_messages.html", {
+            "new_messages": [user_msg, ai_msg]
+        })
