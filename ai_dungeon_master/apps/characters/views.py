@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import Character
 
 WIZARD_SESSION_KEY = 'character_wizard'
 
@@ -92,3 +93,43 @@ class CharacterCreateStep3View(LoginRequiredMixin, View):
         request.session[WIZARD_SESSION_KEY] = wizard_data
 
         return redirect("characters:create_step4")
+
+
+class CharacterCreateStep4View(LoginRequiredMixin, View):
+    def get(self, request):
+        wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
+
+        if not wizard_data.get("stats"):
+            return redirect("characters:create_step3")
+
+        return render(request, "characters/create_step4.html", {
+            "wizard_data": wizard_data
+        })
+
+    def post(self, request):
+        wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
+
+        if not wizard_data:
+            return redirect("characters:create_step1")
+
+        background = request.POST.get("background", "").strip()
+        stats = wizard_data.get("stats", {})
+
+        Character.objects.create(
+            user=request.user,
+            name=wizard_data.get("name"),
+            race=wizard_data.get("race"),
+            character_class=wizard_data.get("character_class"),
+            background=background,
+            strength=stats.get("strength"),
+            dexterity=stats.get("dexterity"),
+            constitution=stats.get("constitution"),
+            intelligence=stats.get("intelligence"),
+            wisdom=stats.get("wisdom"),
+            charisma=stats.get("charisma"),
+        )
+
+        if WIZARD_SESSION_KEY in request.session:
+            del request.session[WIZARD_SESSION_KEY]
+
+        return redirect("game:dashboard")
