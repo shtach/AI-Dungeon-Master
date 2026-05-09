@@ -48,3 +48,47 @@ class CharacterCreateStep2View(LoginRequiredMixin, View):
         request.session[WIZARD_SESSION_KEY] = wizard_data
 
         return redirect("characters:create_step3")
+
+
+class CharacterCreateStep3View(LoginRequiredMixin, View):
+    STATS = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
+    STANDARD_ARRAY = [15, 14, 13, 12, 10, 8]
+
+    def get(self, request):
+        wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
+
+        if not wizard_data.get("character_class"):
+            return redirect("characters:create_step2")
+
+        return render(request, "characters/create_step3.html", {
+            "wizard_data": wizard_data,
+            "standard_array": self.STANDARD_ARRAY,
+            "stats_list": self.STATS
+        })
+
+    def post(self, request):
+        wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
+
+        player_stats = {}
+        for stat in self.STATS:
+            try:
+                val = int(request.POST.get(stat, 0))
+                player_stats[stat] = val
+            except ValueError:
+                player_stats[stat] = 0
+
+        submitted_values = sorted(player_stats.values(), reverse=True)
+        expected_values = sorted(self.STANDARD_ARRAY, reverse=True)
+
+        if submitted_values != expected_values:
+            return render(request, "characters/create_step3.html", {
+                "wizard_data": wizard_data,
+                "standard_array": self.STANDARD_ARRAY,
+                "stats_list": self.STATS,
+                "error": "You must use the exact standard array: 15, 14, 13, 12, 10, 8."
+            })
+
+        wizard_data["stats"] = player_stats
+        request.session[WIZARD_SESSION_KEY] = wizard_data
+
+        return redirect("characters:create_step4")
