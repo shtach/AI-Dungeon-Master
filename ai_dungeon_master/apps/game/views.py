@@ -44,3 +44,14 @@ class SendMessageView(LoginRequiredMixin, View):
         return render(request, "game/_messages.html", {
             "new_messages": [user_msg, ai_msg]
         })
+
+
+class GameSessionView(LoginRequiredMixin, View):
+    def get(self, request, session_id):
+        session = get_object_or_404(GameSession, id=session_id, user=request.user)
+        messages = Message.objects.filter(session=session).order_by('created_at')
+
+        return render(request, "game/session.html", {
+            "session": session,
+            "messages": messages,
+        })

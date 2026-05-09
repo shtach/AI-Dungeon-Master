@@ -1,16 +1,23 @@
-from django.views.generic import CreateView
-from django.urls import reverse_lazy
+from django.shortcuts import render, redirect
+from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .models import Character
-from .forms import CharacterCreationForm
+WIZARD_SESSION_KEY = 'character_wizard'
 
-class CharacterCreateView(LoginRequiredMixin, CreateView):
-    model = Character
-    form_class = CharacterCreationForm
-    template_name = "characters/create.html"
-    success_url = reverse_lazy("game:dashboard")
+class CharacterCreateStep1View(LoginRequiredMixin, View):
+    def get(self, request):
+        wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
 
-    def form_valid(self, form):
-        form.instance.user = self.request.user
-        return super().form_valid(form)
+        return render(request, "characters/create_step1.html", {
+            "wizard_data": wizard_data
+        })
+
+    def post(self, request):
+        name = request.POST.get("name", "").strip()
+        race = request.POST.get("race", "").strip()
+        wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
+        wizard_data["name"] = name
+        wizard_data["race"] = race
+        request.session[WIZARD_SESSION_KEY] = wizard_data
+
+        return redirect("characters:create_step2")
