@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Create Character — Step 3 of 4{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4">
+  <div class="w-full max-w-2xl"
+    x-data="{
+      pool: ['15', '14', '13', '12', '10', '8'],
+      assigned: {
+        strength:     '{% if wizard_data.stats %}{{ wizard_data.stats.strength }}{% endif %}',
+        dexterity:    '{% if wizard_data.stats %}{{ wizard_data.stats.dexterity }}{% endif %}',
+        constitution: '{% if wizard_data.stats %}{{ wizard_data.stats.constitution }}{% endif %}',
+        intelligence: '{% if wizard_data.stats %}{{ wizard_data.stats.intelligence }}{% endif %}',
+        wisdom:       '{% if wizard_data.stats %}{{ wizard_data.stats.wisdom }}{% endif %}',
+        charisma:     '{% if wizard_data.stats %}{{ wizard_data.stats.charisma }}{% endif %}'
+      },
+      availableFor(stat) {
+        const used = Object.entries(this.assigned)
+          .filter(([k, v]) => k !== stat && v !== '')
+          .map(([, v]) => v);
+        return this.pool.filter(v => !used.includes(v));
+      },
+      get unassigned() {
+        const used = Object.values(this.assigned).filter(v => v !== '');
+        return this.pool.filter(v => !used.includes(v));
+      },
+      get allAssigned() {
+        return Object.values(this.assigned).every(v => v !== '');
+      }
+    }">
+
+    <!-- Step progress indicator -->
+    <div class="mb-8">
+      <div class="flex justify-between text-xs text-dm-muted mb-2">
+        <span class="text-dm-accent font-semibold">Step 3 of 4</span>
+        <span>Characteristics</span>
+      </div>
+      <div class="h-1 rounded-full bg-dm-surface">
+        <div class="h-1 rounded-full bg-dm-accent" style="width: 75%"></div>
+      </div>
+    </div>
+
+    <h1 class="text-2xl font-bold text-dm-text mb-1">Choose your characteristics</h1>
+    <p class="text-dm-muted text-sm mb-8">This values defines how story to be continues.</p>
+
+    <!-- Server-side error -->
+    {% if error %}
+    <div class="mb-6 p-4 rounded-xl border border-red-500/40 bg-red-500/10 text-red-400 text-sm">
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Remaining pool indicator -->
+    <div class="mb-6 p-4 rounded-xl bg-dm-surface border border-dm-muted/20">
+      <p class="text-xs text-dm-muted uppercase tracking-widest mb-2">Unassigned values</p>
+      <div class="flex gap-2 flex-wrap">
+        <template x-if="unassigned.length === 0">
+          <span class="text-dm-accent text-sm font-semibold">All values assigned ✓</span>
+        </template>
+        <template x-for="val in unassigned" :key="val">
+          <span class="px-3 py-1 rounded-lg bg-dm-bg border border-dm-muted/30 text-dm-text text-sm font-mono font-semibold" x-text="val"></span>
+        </template>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'characters:create_step3' %}">
+      {% csrf_token %}
+
+      <!-- Stat dropdowns -->
+      <div class="grid grid-cols-2 gap-4 mb-8">
+
+        {% for stat in stats_list %}
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-dm-muted uppercase tracking-widest">{{ stat|title }}</label>
+          <select name="{{ stat }}" x-model="assigned.{{ stat }}">
+            <option value="">— select —</option>
+            <template x-for="val in availableFor('{{ stat }}')" :key="val">
+              <option :value="val" x-text="val"></option>
+            </template>
+          </select>
+        </div>
+        {% endfor %}
+
+      </div>
+
+      <div class="flex justify-between items-center">
+        <a href="{% url 'characters:create_step2' %}"
+           class="text-dm-muted hover:text-dm-text text-sm transition-colors duration-150">
+          ← Back
+        </a>
+        <button type="submit"
+                :disabled="!allAssigned"
+                :class="allAssigned
+                  ? 'bg-dm-accent text-dm-bg hover:opacity-90 cursor-pointer'
+                  : 'bg-dm-surface text-dm-muted cursor-not-allowed'"
+                class="px-6 py-2 rounded-lg font-semibold transition-all duration-150">
+          Next →
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
