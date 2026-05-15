@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %} Create Character — Step 1 of 4 {% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4">
+  <div class="w-full max-w-xl" x-data="{ selectedRace: '{{ wizard_data.race|default:'' }}' }">
+
+    <!-- Progress bar -->
+    <div class="mb-8">
+      <div class="flex justify-between text-xs text-dm-muted mb-2">
+        <span class="text-dm-accent font-semibold">Step 1 of 4</span>
+        <span>Name &amp; Race</span>
+      </div>
+      <div class="h-1 rounded-full bg-dm-surface">
+        <div class="h-1 rounded-full bg-dm-accent" style="width: 25%"></div>
+      </div>
+    </div>
+
+    <h1 class="text-2xl font-bold text-dm-text mb-1">Who are you?</h1>
+    <p class="text-dm-muted text-sm mb-8">Give your adventurer a name and choose their lineage.</p>
+
+    <form method="post" action="{% url 'characters:create_step1' %}">
+      {% csrf_token %}
+
+      <!-- Name -->
+      <div class="mb-6">
+        <label class="block text-xs text-dm-muted uppercase tracking-widest mb-2">Character Name</label>
+        <input type="text" name="name" value="{{ wizard_data.name|default:'' }}"
+               placeholder="e.g. Thorin Ironforge" required>
+      </div>
+
+      <!-- Race cards — list layout for better readability -->
+      <div class="mb-8">
+        <label class="block text-xs text-dm-muted uppercase tracking-widest mb-3">Race</label>
+        <div class="flex flex-col gap-2">
+
+          <button type="button" @click="selectedRace = 'HUMAN'"
+                  :class="selectedRace === 'HUMAN' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
+                  class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
+                 :class="selectedRace === 'HUMAN' ? 'bg-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">⚔</div>
+            <div>
+              <div class="font-semibold text-dm-text text-sm">Human</div>
+              <div class="text-xs text-dm-muted mt-0.5">Versatile and ambitious, excelling in any path they choose.</div>
+            </div>
+            <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                 :class="selectedRace === 'HUMAN' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
+              <svg x-show="selectedRace === 'HUMAN'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </button>
+
+          <button type="button" @click="selectedRace = 'ELF'"
+                  :class="selectedRace === 'ELF' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
+                  class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
+                 :class="selectedRace === 'ELF' ? 'bg-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">✦</div>
+            <div>
+              <div class="font-semibold text-dm-text text-sm">Elf</div>
+              <div class="text-xs text-dm-muted mt-0.5">Ancient and graceful, blessed with keen senses and magic affinity.</div>
+            </div>
+            <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                 :class="selectedRace === 'ELF' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
+              <svg x-show="selectedRace === 'ELF'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </button>
+
+          <button type="button" @click="selectedRace = 'DWARF'"
+                  :class="selectedRace === 'DWARF' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
+                  class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
+                 :class="selectedRace === 'DWARF' ? 'bg-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">⛏</div>
+            <div>
+              <div class="font-semibold text-dm-text text-sm">Dwarf</div>
+              <div class="text-xs text-dm-muted mt-0.5">Stout and resilient, forged in stone and known for unbreakable will.</div>
+            </div>
+            <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                 :class="selectedRace === 'DWARF' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
+              <svg x-show="selectedRace === 'DWARF'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </button>
+
+          <button type="button" @click="selectedRace = 'ORC'"
+                  :class="selectedRace === 'ORC' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
+                  class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
+                 :class="selectedRace === 'ORC' ? 'bg-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">🗡</div>
+            <div>
+              <div class="font-semibold text-dm-text text-sm">Orc</div>
+              <div class="text-xs text-dm-muted mt-0.5">Fierce and powerful, driven by primal strength and raw endurance.</div>
+            </div>
+            <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                 :class="selectedRace === 'ORC' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
+              <svg x-show="selectedRace === 'ORC'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </button>
+
+        </div>
+        <input type="hidden" name="race" :value="selectedRace">
+      </div>
+
+      <button type="submit"
+              :disabled="!selectedRace"
+              :class="selectedRace ? 'bg-dm-accent text-dm-bg hover:opacity-90 cursor-pointer' : 'bg-dm-surface text-dm-muted cursor-not-allowed border border-dm-muted/30'"
+              class="w-full py-3 rounded-xl font-semibold transition-all duration-150">
+        Continue to Class →
+      </button>
+    </form>
+
+  </div>
+</div>
+
+{% endblock %}
