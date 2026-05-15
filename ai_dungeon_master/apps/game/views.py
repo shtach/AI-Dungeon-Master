@@ -38,8 +38,9 @@ class SendMessageView(LoginRequiredMixin, View):
             content=user_text
         )
 
+        full_prompt = build_prompt(session, user_text)
         ai_client = get_ai_client()
-        ai_response_text = ai_client.generate(user_text)
+        ai_response_text = ai_client.generate(full_prompt)
         ai_msg = Message.objects.create(
             session=session,
             role=Message.RoleChoices.ASSISTANT,
