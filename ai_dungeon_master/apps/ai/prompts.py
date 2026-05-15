@@ -1,0 +1,1 @@
+SYSTEM_PROMPT_TEMPLATE = """You're an expert Dungeon Master (DM) for a text-based RPG."""
