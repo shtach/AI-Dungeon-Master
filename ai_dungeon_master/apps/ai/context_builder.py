@@ -9,7 +9,7 @@ def build_prompt(session, user_message):
 
     summary_section = ""
     if session.summary and session.summary.strip():
-        summary_section = f"\n SESSION SUMMARY \n{session.summary.strip()}\n"
+        summary_section = f"\n=== SESSION SUMMARY ===\n{session.summary.strip()}\n"
 
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
         world_name=world.name if world else "Unknown",
