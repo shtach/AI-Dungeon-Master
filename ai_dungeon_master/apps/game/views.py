@@ -7,6 +7,7 @@ from ai_dungeon_master.apps.game.models import GameSession, Message
 from ai_dungeon_master.apps.characters.models import Character
 from ai_dungeon_master.apps.world.models import WorldSetting
 from ai_dungeon_master.apps.ai.client import get_ai_client
+from ai_dungeon_master.apps.ai.context_builder import build_prompt
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -22,7 +23,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
 class SendMessageView(LoginRequiredMixin, View):
     def post(self, request, session_id):
-        session = get_object_or_404(GameSession, id=session_id, user=request.user)
+        session = get_object_or_404(
+            GameSession.objects.select_related('character', 'world', 'scenario'),
+            id=session_id,
+            user=request.user
+        )
         user_text = request.POST.get("message", "").strip()
         if not user_text:
             return render(request, "game/_messages.html", {"new_messages": []})
@@ -33,8 +38,9 @@ class SendMessageView(LoginRequiredMixin, View):
             content=user_text
         )
 
+        full_prompt = build_prompt(session, user_text)
         ai_client = get_ai_client()
-        ai_response_text = ai_client.generate(user_text)
+        ai_response_text = ai_client.generate(full_prompt)
         ai_msg = Message.objects.create(
             session=session,
             role=Message.RoleChoices.ASSISTANT,
