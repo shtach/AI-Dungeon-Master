@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %} Create Character — Step 4 of 4 {% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4">
+  <div class="w-full max-w-2xl">
+
+    <!-- Step progress indicator -->
+    <div class="mb-8">
+      <div class="flex justify-between text-xs text-dm-muted mb-2">
+        <span class="text-dm-accent font-semibold">Step 4 of 4</span>
+        <span>Review</span>
+      </div>
+      <div class="h-1 rounded-full bg-dm-surface">
+        <div class="h-1 rounded-full bg-dm-accent" style="width: 100%"></div>
+      </div>
+    </div>
+
+    <h1 class="text-2xl font-bold text-dm-text mb-1">Review</h1>
+    <p class="text-dm-muted text-sm mb-8">Make sure that you choooosed all what you need.</p>
+
+    <!-- Read-only character summary card -->
+    <div class="mb-8 p-6 rounded-xl bg-dm-surface border border-dm-muted/20">
+      <h2 class="text-dm-accent font-bold text-lg mb-1">{{ wizard_data.name }}</h2>
+      <p class="text-dm-muted text-sm mb-6">{{ wizard_data.race|title }} · {{ wizard_data.character_class }}</p>
+
+      <div class="grid grid-cols-3 gap-3">
+        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
+          <span class="text-xs text-dm-muted uppercase tracking-widest">Strength</span>
+          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.strength }}</span>
+        </div>
+        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
+          <span class="text-xs text-dm-muted uppercase tracking-widest">Dexterity</span>
+          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.dexterity }}</span>
+        </div>
+        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
+          <span class="text-xs text-dm-muted uppercase tracking-widest">Constitution</span>
+          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.constitution }}</span>
+        </div>
+        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
+          <span class="text-xs text-dm-muted uppercase tracking-widest">Intelligence</span>
+          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.intelligence }}</span>
+        </div>
+        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
+          <span class="text-xs text-dm-muted uppercase tracking-widest">Wisdom</span>
+          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.wisdom }}</span>
+        </div>
+        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
+          <span class="text-xs text-dm-muted uppercase tracking-widest">Charisma</span>
+          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.charisma }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Background form -->
+    <form method="post" action="{% url 'characters:create_step4' %}">
+      {% csrf_token %}
+
+      <div class="mb-8">
+        <label class="block text-xs text-dm-muted uppercase tracking-widest mb-2">
+          Background Story
+          <span class="ml-2 normal-case text-dm-muted/60">(optional)</span>
+        </label>
+        <textarea name="background" rows="5"
+                  placeholder="Describe your character's past, motivations, and why they venture into the unknown…"
+                  class="w-full resize-none"></textarea>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <a href="{% url 'characters:create_step3' %}"
+           class="text-dm-muted hover:text-dm-text text-sm transition-colors duration-150">
+          ← Back
+        </a>
+        <button type="submit"
+                class="bg-dm-accent text-dm-bg hover:opacity-90 px-6 py-2 rounded-lg font-semibold transition-opacity duration-150 cursor-pointer">
+          Create Character
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
