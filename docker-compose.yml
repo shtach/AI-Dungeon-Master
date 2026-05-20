@@ -36,6 +36,7 @@ services:
     restart: always
     command: >
       sh -c "python manage.py migrate --no-input &&
+             python manage.py seed_data &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
