@@ -11,7 +11,6 @@ A text-based RPG powered by Django and Gemini AI. Play D&D 5e with an AI Dungeon
 ![Gemini](https://img.shields.io/badge/Gemini-AI-4285F4?style=for-the-badge&logo=google)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?style=for-the-badge&logo=postgresql)
 
-
 ## Quick Start — Docker (recommended)
 
 The fastest way to run the project locally. Only [Docker Desktop](https://www.docker.com/products/docker-desktop/) required — no Python, PostgreSQL, or Node.js installation needed.
@@ -31,7 +30,6 @@ cp .env.example .env
 
 Open `.env` and fill in the required fields:
 
-
 > `DB_HOST` does not need to be changed — Docker Compose sets it automatically.
 
 ### 3. Start the project
@@ -41,6 +39,7 @@ docker compose up
 ```
 
 Docker will automatically:
+
 - build the Python image
 - start PostgreSQL and wait until it is ready
 - run `migrate`
@@ -92,11 +91,11 @@ docker compose build
 
 ## Manual Setup — Requirements
 
-| Dependency     | Arch Linux                  | Windows                                                                |
-| -------------- | --------------------------- | ---------------------------------------------------------------------- |
+| Dependency     | Arch Linux                  | Windows                                                               |
+| -------------- | --------------------------- | --------------------------------------------------------------------- |
 | Python 3.12+   | `sudo pacman -S python`     | [python.org](https://www.python.org/downloads/) — check "Add to PATH" |
-| Git            | `sudo pacman -S git`        | [git-scm.com](https://git-scm.com/download/win)                        |
-| PostgreSQL 15+ | `sudo pacman -S postgresql` | [postgresql.org](https://www.postgresql.org/download/windows/)         |
+| Git            | `sudo pacman -S git`        | [git-scm.com](https://git-scm.com/download/win)                       |
+| PostgreSQL 15+ | `sudo pacman -S postgresql` | [postgresql.org](https://www.postgresql.org/download/windows/)        |
 
 ---
 
@@ -398,7 +397,7 @@ AI-Dungeon-Master/
 
 ```bash
 # Run all tests
-python manage.py test
+pytest
 
 # Make migrations after model changes
 python manage.py makemigrations
