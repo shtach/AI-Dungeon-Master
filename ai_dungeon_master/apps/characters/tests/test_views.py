@@ -5,17 +5,10 @@ from ai_dungeon_master.apps.characters.models import Character
 pytestmark = pytest.mark.django_db
 
 
-@pytest.fixture
-def client_logged_in(client, django_user_model):
-    user = django_user_model.objects.create_user(username="testuser", password="testpass123")
-    client.force_login(user)
-    return client, user
-
-
 class TestCharacterWizard:
 
-    def test_step1_post_saves_to_session(self, client_logged_in):
-        client, _ = client_logged_in
+    def test_step1_post_saves_to_session(self, auth_client):
+        client, _ = auth_client
         url = reverse("characters:create_step1")
 
         response = client.post(url, {"name": "Thorin", "race": "Dwarf"})
@@ -24,16 +17,16 @@ class TestCharacterWizard:
         assert response.url == reverse("characters:create_step2")
         assert client.session.get("character_wizard") == {"name": "Thorin", "race": "Dwarf"}
 
-    def test_step2_redirects_if_no_step1_data(self, client_logged_in):
-        client, _ = client_logged_in
+    def test_step2_redirects_if_no_step1_data(self, auth_client):
+        client, _ = auth_client
         url = reverse("characters:create_step2")
         response = client.get(url)
 
         assert response.status_code == 302
         assert response.url == reverse("characters:create_step1")
 
-    def test_step3_post_validates_standard_array(self, client_logged_in):
-        client, _ = client_logged_in
+    def test_step3_post_validates_standard_array(self, auth_client):
+        client, _ = auth_client
 
         session = client.session
         session["character_wizard"] = {"name": "Thorin", "character_class": "Warrior"}
@@ -59,8 +52,8 @@ class TestCharacterWizard:
         assert response.status_code == 302
         assert response.url == reverse("characters:create_step4")
 
-    def test_step4_creates_character_and_clears_session(self, client_logged_in):
-        client, user = client_logged_in
+    def test_step4_creates_character_and_clears_session(self, auth_client):
+        client, user = auth_client
 
         session = client.session
         session["character_wizard"] = {
