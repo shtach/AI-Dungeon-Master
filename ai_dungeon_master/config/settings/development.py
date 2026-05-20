@@ -2,7 +2,9 @@ from .base import *
 
 DEBUG = True
 SECRET_KEY = "dev-insecure-key-not-for-production-change-me"
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
+ALLOWED_HOSTS = get_env("ALLOWED_HOSTS", "localhost,127.0.0.1,0.0.0.0").split(",")
+
+CSRF_TRUSTED_ORIGINS = get_env("CSRF_TRUSTED_ORIGINS", "").split(",") if get_env("CSRF_TRUSTED_ORIGINS", "") else []
 
 # PostgreSQL credentials are read from .env (DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
 # To use SQLite locally instead, uncomment:
