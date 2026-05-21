@@ -102,7 +102,7 @@ jobs:
         run: pip install black ruff flake8
 
       - name: ⬛ Black formatting check
-        run: black --check --diff .
+        run: black --line-length 120 --check --diff .
 
       - name: 🔥 Ruff linting
         run: ruff check .
