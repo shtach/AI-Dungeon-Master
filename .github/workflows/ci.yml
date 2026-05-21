@@ -86,7 +86,7 @@ jobs:
           DB_HOST: localhost
           DB_PORT: "5432"
           GEMINI_API_KEY: test-key
-        run: python manage.py migrate --check
+        run: python manage.py makemigrations --check --dry-run
 
   lint:
     name: Code Quality
