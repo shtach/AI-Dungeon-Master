@@ -14,7 +14,7 @@ concurrency:
 jobs:
   test:
     name: Django Tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.12"]
@@ -43,9 +43,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-          cache-dependency-path: |
-        requirements/common.txt
-        requirements/development.txt
+          cache-dependency-path: "requirements/*.txt"
 
       - name: 📦 Install dependencies
         run: |
@@ -76,7 +74,7 @@ jobs:
           DB_HOST: localhost
           DB_PORT: "5432"
           GEMINI_API_KEY: test-key-mocked-in-tests
-        run: python manage.py test --verbosity=2 --failfast
+        run: pytest --tb=short -q
 
       - name: 🔍 Check for missing migrations
         env:
@@ -87,12 +85,12 @@ jobs:
           DB_PASSWORD: postgres_test_password
           DB_HOST: localhost
           DB_PORT: "5432"
-          GEMINI_API_KEY: test-key-mocked-in-tests
+          GEMINI_API_KEY: test-key
         run: python manage.py makemigrations --check --dry-run
 
   lint:
     name: Code Quality
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -101,7 +99,7 @@ jobs:
           cache: "pip"
 
       - name: Install linting tools
-        run: pip install black==24.10.0 ruff==0.6.9 flake8==7.1.1
+        run: pip install black ruff flake8
 
       - name: ⬛ Black formatting check
         run: black --check --diff --line-length 120 .

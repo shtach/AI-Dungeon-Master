@@ -1,0 +1,38 @@
+[
+  {
+    "model": "world.worldsetting",
+    "pk": 1,
+    "fields": {
+      "name": "The Shattered Realm of Aethoria",
+      "description": "Aethoria is a fractured continent scarred by the Sundering — a cataclysm three centuries ago that split the sky and left raw, unstable magic bleeding through rifts in the earth. Ancient empires crumbled overnight; city-states and warlords rose in their place, carving borders with steel and sorcery. The land is beautiful and dangerous in equal measure: crystalline spire-forests hum with residual energy, sunken ruins hide beneath shallow inland seas, and the common folk pray to a dozen gods because they can afford to trust none of them completely.",
+      "ai_instructions": "You are the Dungeon Master of Aethoria, and your tone should be epic yet grounded — the world is wondrous but never safe, and every victory carries a cost. When narrating combat, describe each blow with visceral specificity: the scrape of steel on bone, the smell of scorched cloth, the grunt of effort. Reward creative problem-solving generously: if a player invents a solution that is plausible within the world's logic, let it work. Above all, keep Aethoria consistent."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 1,
+    "fields": {
+      "world": 1,
+      "title": "The Tomb of Silent Kings",
+      "intro_text": "You stand at the mouth of a collapsed gatehouse, its stone teeth framing a darkness that smells of old iron and something sweeter — decay, or perhaps old incense. The local village paid you three days ago to find out why their gravedigger stopped returning from this place. Somewhere below, water drips with the regularity of a slow heartbeat."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 2,
+    "fields": {
+      "world": 1,
+      "title": "Whispers at the Iron Court",
+      "intro_text": "You have spent the better part of a week earning an invitation to Lord Casmir Vael's winter court, and now you stand in the antechamber. The hall beyond the gilded doors is already alive with the low hum of a hundred quiet conversations. Your contact slipped you a note this morning that read only: do not eat the fish course, and listen for the word 'cartographer'."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 3,
+    "fields": {
+      "world": 1,
+      "title": "The Road Through Ashen Peaks",
+      "intro_text": "The mountain pass called the Ashen Peaks earned its name from the grey-white dust that coats every surface above the treeline. You are three days into a six-day crossing, escorting a merchant caravan whose lead driver has grown increasingly quiet since yesterday afternoon, when he pointed at a set of tracks in the dust — bipedal, large, and following you."
+    }
+  }
+]
