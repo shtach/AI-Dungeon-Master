@@ -1,0 +1,42 @@
+<div class="space-y-4">
+
+    <!-- PLAYER -->
+    <div class="flex justify-end">
+
+        <div class="max-w-xl bg-yellow-500 text-black px-5 py-3 rounded-2xl">
+            {{ player_message.content }}
+        </div>
+
+    </div>
+
+    <!-- DM -->
+    <div class="flex justify-start">
+
+        <div class="max-w-2xl bg-zinc-900 border border-zinc-700 px-5 py-4 rounded-2xl">
+
+            <p class="mb-4 whitespace-pre-line">
+                {{ dm_message.content }}
+            </p>
+
+            <!-- DICE -->
+            <div class="space-y-3">
+
+                {% for roll in dice_rolls %}
+                    {% include "game/_dice_result.html" %}
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% if hp_changed %}
+<div
+    hx-get="{% url 'game:sidebar' session.id %}"
+    hx-target="#character-sidebar"
+    hx-trigger="load">
+</div>
+{% endif %}

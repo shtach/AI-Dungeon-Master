@@ -1,0 +1,36 @@
+<div>
+
+    <div class="flex justify-between mb-2">
+
+        <span class="font-bold">
+            HP
+        </span>
+
+        <span>
+            {{ hp_current }} / {{ hp_max }}
+        </span>
+
+    </div>
+
+    <div class="w-full h-4 bg-zinc-800 rounded-full overflow-hidden">
+
+        <div
+            class="
+            h-full
+
+            {% widthratio hp_current hp_max 100 as hp_percent %}
+            {% if hp_percent|add:0 > 50 %}
+                bg-green-500
+            {% elif hp_percent|add:0 > 25 %}
+                bg-yellow-500
+            {% else %}
+                bg-red-500
+            {% endif %}
+            "
+
+            style="width: {{ hp_percent }}%;">
+        </div>
+
+    </div>
+
+</div>

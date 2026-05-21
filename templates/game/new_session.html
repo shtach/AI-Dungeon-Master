@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}
+New Session
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-10 px-6">
+
+    <h1 class="text-4xl font-bold mb-8">
+        Start New Adventure
+    </h1>
+
+    <form method="post"
+          class="space-y-8">
+
+        {% csrf_token %}
+
+        <!-- world -->
+        <div>
+            <label class="block mb-2 text-sm font-semibold">
+                Select World
+            </label>
+
+            <select
+                name="world"
+                class="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-4"
+
+                hx-get="{% url 'game:get_scenarios' %}"
+                hx-target="#scenario-container"
+                hx-trigger="change"
+                hx-include="[name='world']">
+
+                {% for world in worlds %}
+                    <option value="{{ world.id }}">
+                        {{ world.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- scena -->
+        <div id="scenario-container">
+            {% include "game/partials/scenario_select.html" %}
+        </div>
+
+        <!-- charecter card -->
+        <div class="bg-zinc-900 rounded-2xl p-6 border border-zinc-700">
+
+            <h2 class="text-xl font-bold mb-4">
+                Selected Character
+            </h2>
+
+            <div class="flex items-center gap-4">
+
+                <img src="{{ character.avatar.url }}"
+                     class="w-20 h-20 rounded-xl object-cover">
+
+                <div>
+                    <p class="text-2xl font-bold">
+                        {{ character.name }}
+                    </p>
+
+                    <p class="text-zinc-400">
+                        {{ character.race }} • {{ character.character_class }}
+                    </p>
+
+                    <p class="text-zinc-400">
+                        Level {{ character.level }}
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+      
+        <button
+            type="submit"
+            class="px-8 py-4 rounded-xl bg-yellow-500 text-black font-bold hover:scale-105 transition">
+
+            Begin Adventure
+        </button>
+
+    </form>
+
+</div>
+{% endblock %}

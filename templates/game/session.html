@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}
+Game Session
+{% endblock %}
+
+{% block content %}
+<div class="h-screen flex overflow-hidden">
+
+    
+    <aside class="w-96 border-r border-zinc-800 overflow-y-auto">
+
+        {% include "game/_sidebar.html" %}
+
+    </aside>
+
+    <main class="flex-1 flex flex-col">
+
+        <div id="chat-history"
+             class="flex-1 overflow-y-auto p-6 space-y-6">
+
+            {% for message in messages %}
+                {% include "game/_messages.html" %}
+            {% endfor %}
+
+        </div>
+
+        
+        <div id="typing-indicator"
+             class="hidden htmx-indicator px-6 py-2 text-zinc-400">
+
+            Dungeon Master is thinking...
+        </div>
+
+        
+        <form
+            hx-post="{% url 'game:send_message' session.id %}"
+            hx-target="#chat-history"
+            hx-swap="beforeend"
+            hx-indicator="#typing-indicator"
+
+            class="border-t border-zinc-800 p-4 flex gap-4">
+
+            {% csrf_token %}
+
+            <input
+                type="text"
+                name="message"
+                class="flex-1 rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3"
+                placeholder="What do you do?">
+
+            <button
+                class="px-6 rounded-xl bg-yellow-500 text-black font-bold">
+
+                Send
+            </button>
+
+        </form>
+
+    </main>
+
+</div>
+{% endblock %}

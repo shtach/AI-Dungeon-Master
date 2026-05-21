@@ -1,0 +1,22 @@
+<div class="space-y-6">
+
+    {% for stat in stats %}
+    <div class="flex items-center justify-between">
+
+        <span class="font-bold">
+            {{ stat.name }}
+        </span>
+
+        <input type="number"
+               name="{{ stat.name }}"
+               value="{{ stat.value }}"
+               class="w-24 text-center rounded-xl bg-zinc-900">
+
+    </div>
+    {% endfor %}
+
+    <div class="text-yellow-400">
+        Remaining points: {{ remaining }}
+    </div>
+
+</div>
