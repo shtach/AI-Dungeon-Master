@@ -14,7 +14,7 @@ concurrency:
 jobs:
   test:
     name: Django Tests
-    runs-on: alpine-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.12"]
