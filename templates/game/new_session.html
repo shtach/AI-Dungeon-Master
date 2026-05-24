@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}New Adventure — AI Dungeon Master{% endblock %}
+
+{% block content %}
+{{ worlds_json|json_script:"worlds-data" }}
+
+<div class="min-h-screen flex items-center justify-center py-12 px-4">
+  <div class="w-full max-w-xl"
+       x-data="{
+         worlds: JSON.parse(document.getElementById('worlds-data').textContent),
+         selectedWorld: '',
+         selectedScenario: '',
+         scenarios: [],
+         selectWorld(id) {
+           this.selectedWorld = id;
+           this.selectedScenario = '';
+           const w = this.worlds.find(w => String(w.id) === id);
+           this.scenarios = w ? w.scenarios : [];
+         },
+         get canSubmit() {
+           return this.selectedWorld && this.selectedScenario;
+         }
+       }">
+
+    <div class="mb-8">
+      <a href="{% url 'game:dashboard' %}"
+         class="text-dm-muted text-sm hover:text-dm-text transition-colors">← Dashboard</a>
+      <h1 class="text-2xl font-bold text-dm-text mt-4 mb-1">New Adventure</h1>
+      <p class="text-dm-muted text-sm">Choose a world and scenario for your character.</p>
+    </div>
+
+    <!-- Character (read-only) -->
+    <div class="bg-dm-surface border border-dm-muted/20 rounded-xl p-4 mb-8">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-dm-bg flex items-center justify-center text-lg">⚔</div>
+        <div>
+          <p class="font-bold text-dm-accent text-sm">{{ character.name }}</p>
+          <p class="text-dm-muted text-xs">
+            {{ character.get_race_display }} ·
+            {{ character.get_character_class_display }} ·
+            Level {{ character.level }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'game:create_session' %}">
+      {% csrf_token %}
+      <input type="hidden" name="character_id" value="{{ character.id }}">
+      <input type="hidden" name="world_id" :value="selectedWorld">
+      <input type="hidden" name="scenario_id" :value="selectedScenario">
+
+      <!-- World selection -->
+      <div class="mb-8">
+        <label class="block text-xs text-dm-muted uppercase tracking-widest mb-3">World</label>
+        <div class="flex flex-col gap-2">
+          {% for world in worlds %}
+          <button type="button"
+                  @click="selectWorld('{{ world.id }}')"
+                  :class="selectedWorld === '{{ world.id }}' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
+                  class="flex flex-col gap-1 p-4 rounded-xl border bg-dm-surface transition-colors text-left w-full">
+            <span class="font-semibold text-dm-text text-sm">{{ world.name }}</span>
+            <span class="text-xs text-dm-muted leading-relaxed">
+              {{ world.description|truncatechars:100 }}
+            </span>
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Scenario selection -->
+      <div class="mb-8" x-show="selectedWorld">
+        <label class="block text-xs text-dm-muted uppercase tracking-widest mb-3">Scenario</label>
+        <div class="flex flex-col gap-2">
+          <template x-for="scenario in scenarios" :key="scenario.id">
+            <button type="button"
+                    @click="selectedScenario = String(scenario.id)"
+                    :class="selectedScenario === String(scenario.id) ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
+                    class="p-4 rounded-xl border bg-dm-surface transition-colors text-left w-full">
+              <span class="font-semibold text-dm-text text-sm" x-text="scenario.title"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <button type="submit"
+              :disabled="!canSubmit"
+              :class="canSubmit
+                ? 'bg-dm-accent text-dm-bg hover:opacity-90 cursor-pointer'
+                : 'bg-dm-surface text-dm-muted cursor-not-allowed'"
+              class="w-full py-3 rounded-xl font-semibold transition-all text-sm">
+        Begin your adventure →
+      </button>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
