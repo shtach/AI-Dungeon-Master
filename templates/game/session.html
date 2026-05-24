@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ session.character.name }} — AI Dungeon Master{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden">
+
+    {# ===== LEFT SIDEBAR ===== #}
+    <aside class="w-60 flex-shrink-0 bg-dm-surface border-r border-dm-muted/20 flex flex-col p-4 gap-5">
+
+        {# Character identity #}
+        <div>
+            <h2 class="text-base font-bold text-dm-accent leading-tight">
+                {{ session.character.name }}
+            </h2>
+            <p class="text-xs text-dm-muted mt-0.5">
+                {{ session.character.get_race_display }}
+                &middot;
+                {{ session.character.get_character_class_display }}
+            </p>
+            <p class="text-xs text-dm-muted">Level {{ session.character.level }}</p>
+        </div>
+
+        {# HP bar #}
+        <div>
+            <div class="flex justify-between text-xs text-dm-muted mb-1">
+                <span>HP</span>
+                <span>{{ session.character.current_hp }} / {{ session.character.max_hp }}</span>
+            </div>
+            {% widthratio session.character.current_hp session.character.max_hp 100 as hp_percent %}
+            <div class="w-full bg-dm-muted/20 rounded-full h-2">
+                <div class="h-2 rounded-full transition-all duration-300
+                    {% if hp_percent >= 100 %}bg-green-500
+                    {% elif hp_percent > 50 %}bg-yellow-400
+                    {% else %}bg-red-500{% endif %}"
+                     style="width: {{ hp_percent }}%">
+                </div>
+            </div>
+        </div>
+
+        {# Labelled stats #}
+        <div class="flex flex-col gap-1.5">
+            <div class="flex justify-between text-xs">
+                <span class="text-dm-muted">Armour Class</span>
+                <span class="text-dm-text font-medium">{{ session.character.armor_class }}</span>
+            </div>
+            <div class="flex justify-between text-xs">
+                <span class="text-dm-muted">Speed</span>
+                <span class="text-dm-text font-medium">{{ session.character.speed }} ft</span>
+            </div>
+        </div>
+
+        {# World / scenario info #}
+        <div class="border-t border-dm-muted/20 pt-3 text-xs">
+            <p class="font-semibold text-dm-text">{{ session.world.name }}</p>
+            <p class="text-dm-muted mt-0.5">{{ session.scenario.title }}</p>
+        </div>
+
+        {# Dashboard link — pinned to bottom #}
+        <div class="mt-auto">
+            <a href="{% url 'game:dashboard' %}"
+               class="text-xs text-dm-muted hover:text-dm-accent transition-colors">
+                ← Dashboard
+            </a>
+        </div>
+    </aside>
+
+    {# ===== MAIN AREA ===== #}
+    <main class="flex-1 flex flex-col min-w-0 bg-dm-bg">
+
+        {# Scrollable message history #}
+        <div id="messages"
+             class="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+            {% include "game/_messages.html" with new_messages=messages %}
+        </div>
+
+        {# ===== INPUT BAR ===== #}
+        <div class="border-t border-dm-muted/20 p-3 bg-dm-surface"
+             x-data="{ message: '', sending: false }"
+             x-on:htmx:before-request="sending = true"
+             x-on:htmx:after-request="
+                 sending = false;
+                 message = '';
+                 $nextTick(() => {
+                     const c = document.getElementById('messages');
+                     c.scrollTop = c.scrollHeight;
+                 })
+             ">
+
+            <form hx-post="{% url 'game:send_message' session.id %}"
+                  hx-target="#messages"
+                  hx-swap="beforeend"
+                  class="flex gap-2 items-end">
+                {% csrf_token %}
+
+                <textarea
+                    name="message"
+                    x-model="message"
+                    @keydown.ctrl.enter.prevent="
+                        if (!sending && message.trim()) {
+                            htmx.trigger($el.closest('form'), 'submit');
+                        }
+                    "
+                    placeholder="Describe your action… (Ctrl+Enter to send)"
+                    rows="2"
+                    class="flex-1 resize-none rounded-lg p-3 text-sm"
+                ></textarea>
+
+                <button type="submit"
+                        :disabled="sending || !message.trim()"
+                        :class="{
+                            'opacity-40 cursor-not-allowed': sending || !message.trim(),
+                            'hover:opacity-90': !sending && message.trim()
+                        }"
+                        class="bg-dm-accent text-dm-bg font-semibold px-4 py-2 rounded-lg transition-opacity self-end text-sm">
+                    <span x-show="!sending">Send</span>
+                    <span x-show="sending" x-cloak>…</span>
+                </button>
+            </form>
+        </div>
+    </main>
+</div>
+
+{# Auto-scroll to bottom on initial page load #}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var c = document.getElementById('messages');
+        if (c) { c.scrollTop = c.scrollHeight; }
+    });
+</script>
+{% endblock %}
