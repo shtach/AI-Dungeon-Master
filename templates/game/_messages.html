@@ -1,0 +1,27 @@
+{% for message in new_messages %}
+
+    {% if message.role == "USER" %}
+    <div class="flex justify-end">
+        <div class="max-w-[70%] bg-dm-surface border-l-2 border-dm-accent rounded-lg px-3 py-2">
+            <p class="text-sm text-dm-text" style="white-space: pre-wrap;">{{ message.content }}</p>
+            <p class="text-xs text-dm-muted mt-1 text-right">{{ message.created_at|date:"H:i" }}</p>
+        </div>
+    </div>
+
+    {% elif message.role == "ASSISTANT" %}
+    <div class="flex justify-start">
+        <div class="max-w-[70%] bg-dm-surface rounded-lg px-3 py-2">
+            <p class="text-xs text-dm-accent font-semibold mb-1">🎲 DM</p>
+            <p class="text-sm text-dm-text" style="white-space: pre-wrap;">{{ message.content }}</p>
+            <p class="text-xs text-dm-muted mt-1">{{ message.created_at|date:"H:i" }}</p>
+        </div>
+    </div>
+
+    {% elif message.role == "SYSTEM" %}
+    <div class="flex justify-center">
+        <p class="text-xs italic text-dm-muted text-center">{{ message.content }}</p>
+    </div>
+
+    {% endif %}
+
+{% endfor %}
