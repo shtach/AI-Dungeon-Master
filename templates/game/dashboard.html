@@ -3,15 +3,145 @@
 {% block title %}Dashboard — AI Dungeon Master{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col items-center justify-center gap-6">
-    <h1 class="text-4xl font-bold text-dm-accent">AI Dungeon Master</h1>
-    <p class="text-dm-muted">Welcome, {{ request.user.username }}</p>
-    {% for character in characters %}
-    <p>Name: {{ character.name }}, Class: {{ character.character_class }}</p>
-    {% endfor %}
-    <form action="{% url 'accounts:logout' %}" method="post" class="inline">
-    {% csrf_token %}
-    <button type="submit" class="text-blue-500 hover:underline">Logout</button>
-</form>
+<div class="min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="flex items-center justify-between px-6 py-4 border-b border-dm-muted/20">
+    <span class="text-dm-accent font-bold text-lg tracking-tight">⚔ AI Dungeon Master</span>
+    <div class="flex items-center gap-4">
+      <span class="text-dm-muted text-sm">{{ request.user.username }}</span>
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-dm-muted hover:text-dm-text text-sm transition-colors">
+          Logout
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-6 py-10 flex flex-col gap-12">
+
+    <!-- Section: Characters -->
+    <section>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-dm-text">Your characters</h2>
+        {% if characters_with_sessions %}
+        <a href="{% url 'characters:create_step1' %}"
+           class="text-sm text-dm-accent hover:underline">
+          ＋ New character
+        </a>
+        {% endif %}
+      </div>
+
+      {% if not characters_with_sessions %}
+      <!-- Empty state -->
+      <div class="flex flex-col items-center justify-center gap-4 py-20
+                  border border-dashed border-dm-muted/30 rounded-2xl text-center">
+        <p class="text-4xl">🗺</p>
+        <p class="text-dm-muted text-sm">You don't have any characters yet.</p>
+        <a href="{% url 'characters:create_step1' %}"
+           class="mt-2 bg-dm-accent text-dm-bg font-semibold px-6 py-2
+                  rounded-xl hover:opacity-90 transition-opacity text-sm">
+          Create your first character →
+        </a>
+      </div>
+
+      {% else %}
+      <!-- Character grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for character, session, hp_pct in characters_with_sessions %}
+        <div class="bg-dm-surface border border-dm-muted/20 rounded-2xl p-6 flex flex-col gap-4">
+
+          <!-- Name + meta -->
+          <div>
+            <h3 class="text-lg font-bold text-dm-accent">{{ character.name }}</h3>
+            <p class="text-dm-muted text-xs mt-0.5">
+              {{ character.get_race_display }} ·
+              {{ character.get_character_class_display }} ·
+              Level {{ character.level }}
+            </p>
+          </div>
+
+          <!-- HP bar -->
+          <div>
+            <div class="flex justify-between text-xs text-dm-muted mb-1">
+              <span>HP</span>
+              <span>{{ character.current_hp }} / {{ character.max_hp }}</span>
+            </div>
+            <div class="h-2 rounded-full bg-dm-bg overflow-hidden">
+              <div class="h-2 rounded-full transition-all duration-300
+                {% if character.current_hp == character.max_hp %}
+                  bg-green-500
+                {% elif hp_pct > 50 %}
+                  bg-yellow-500
+                {% else %}
+                  bg-red-500
+                {% endif %}"
+                style="width: {{ hp_pct }}%">
+              </div>
+            </div>
+          </div>
+
+          <!-- Action button -->
+          <div class="mt-auto pt-2">
+            {% if session %}
+            <a href="{% url 'game:session' session.id %}"
+               class="block w-full text-center bg-dm-accent text-dm-bg font-semibold
+                      py-2 rounded-xl hover:opacity-90 transition-opacity text-sm">
+              Continue →
+            </a>
+            {% else %}
+            <a href="{% url 'game:create_session' %}?character_id={{ character.id }}"
+               class="block w-full text-center border border-dm-accent text-dm-accent font-semibold
+                      py-2 rounded-xl hover:bg-dm-accent hover:text-dm-bg transition-all text-sm">
+              New game
+            </a>
+            {% endif %}
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- Section: Active Sessions (only when non-empty) -->
+    {% if active_sessions %}
+    <section>
+      <h2 class="text-xl font-bold text-dm-text mb-6">Active sessions</h2>
+      <div class="bg-dm-surface border border-dm-muted/20 rounded-2xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-dm-muted/20 text-dm-muted text-xs uppercase tracking-wide">
+              <th class="text-left px-5 py-3">Character</th>
+              <th class="text-left px-5 py-3">World</th>
+              <th class="text-left px-5 py-3">Scenario</th>
+              <th class="text-right px-5 py-3">Turns</th>
+              <th class="px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for session in active_sessions %}
+            <tr class="border-b border-dm-muted/10 last:border-0 hover:bg-dm-bg/50 transition-colors">
+              <td class="px-5 py-4 text-dm-text font-medium">{{ session.character.name }}</td>
+              <td class="px-5 py-4 text-dm-muted">{{ session.world.name }}</td>
+              <td class="px-5 py-4 text-dm-muted">{{ session.scenario.title }}</td>
+              <td class="px-5 py-4 text-dm-muted text-right font-mono">{{ session.turn_count }}</td>
+              <td class="px-5 py-4 text-right">
+                <a href="{% url 'game:session' session.id %}"
+                   class="text-dm-accent hover:underline text-xs">
+                  Resume →
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% endif %}
+
+  </main>
 </div>
 {% endblock %}
