@@ -2,7 +2,7 @@ line-length = 120
 
 [lint]
 select = ["E", "F", "W"]
-ignore = ["E203"]  # whitespace before ':', conflicts with black
+ignore = ["E203", "W503"]  # whitespace before ':' and line break before binary operator, conflicts with black
 
 [lint.per-file-ignores]
 "ai_dungeon_master/config/settings/*.py" = ["F403", "F405"]

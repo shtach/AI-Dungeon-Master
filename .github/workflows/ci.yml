@@ -104,3 +104,6 @@ jobs:
 
       - name: 🔥 Ruff linting
         run: ruff check .
+
+      - name: 🎨 Ruff formatting
+        run: ruff format --check .
