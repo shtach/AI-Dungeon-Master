@@ -70,7 +70,7 @@ class TestCharacterWizard:
         response = client.post(url, {"background": "A brave warrior from the lonely mountain."})
 
         assert response.status_code == 302
-        assert response.url == reverse("game:dashboard")
+        assert response.url.startswith('/session/new/')
 
         assert Character.objects.count() == 1
         char = Character.objects.first()
