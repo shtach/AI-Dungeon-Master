@@ -10,14 +10,17 @@ WIZARD_SESSION_KEY = 'character_wizard'
 class CharacterCreateStep1View(LoginRequiredMixin, View):
     def get(self, request):
         wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
-
         return render(request, "characters/create_step1.html", {
             "wizard_data": wizard_data
         })
 
     def post(self, request):
         name = request.POST.get("name", "").strip()
-        race = request.POST.get("race", "").strip()
+        race = request.POST.get("race", "").strip().upper()
+
+        if race not in Character.RaceChoices.values:
+            return redirect("characters:create_step1")
+
         wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
         wizard_data["name"] = name
         wizard_data["race"] = race
@@ -35,14 +38,13 @@ class CharacterCreateStep2View(LoginRequiredMixin, View):
 
         return render(request, "characters/create_step2.html", {
             "wizard_data": wizard_data,
-            "available_classes": ["Warrior", "Wizard", "Rogue", "Cleric"]
+            "available_classes": Character.ClassChoices.values
         })
 
     def post(self, request):
-        character_class = request.POST.get("character_class", "").strip()
+        character_class = request.POST.get("character_class", "").strip().upper()
 
-        allowed_classes = ["Warrior", "Wizard", "Rogue", "Cleric"]
-        if character_class not in allowed_classes:
+        if character_class not in Character.ClassChoices.values:
             return redirect("characters:create_step2")
 
         wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
@@ -53,8 +55,8 @@ class CharacterCreateStep2View(LoginRequiredMixin, View):
 
 
 class CharacterCreateStep3View(LoginRequiredMixin, View):
-    STATS = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'] # same
-    STANDARD_ARRAY = [15, 14, 13, 12, 10, 8] # must be implemented in another way
+    STATS = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
+    STANDARD_ARRAY = [15, 14, 13, 12, 10, 8]
 
     def get(self, request):
         wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
@@ -103,8 +105,22 @@ class CharacterCreateStep4View(LoginRequiredMixin, View):
         if not wizard_data.get("stats"):
             return redirect("characters:create_step3")
 
+        stats = wizard_data.get("stats", {})
+        character_preview = Character(
+            name=wizard_data.get("name"),
+            race=wizard_data.get("race"),
+            character_class=wizard_data.get("character_class"),
+            strength=stats.get("strength"),
+            dexterity=stats.get("dexterity"),
+            constitution=stats.get("constitution"),
+            intelligence=stats.get("intelligence"),
+            wisdom=stats.get("wisdom"),
+            charisma=stats.get("charisma"),
+        )
+
         return render(request, "characters/create_step4.html", {
-            "wizard_data": wizard_data
+            "wizard_data": wizard_data,
+            "character": character_preview
         })
 
     def post(self, request):
