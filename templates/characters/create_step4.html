@@ -6,7 +6,6 @@
 <div class="min-h-screen flex items-center justify-center py-12 px-4">
   <div class="w-full max-w-2xl">
 
-    <!-- Step progress indicator -->
     <div class="mb-8">
       <div class="flex justify-between text-xs text-dm-muted mb-2">
         <span class="text-dm-accent font-semibold">Step 4 of 4</span>
@@ -20,10 +19,11 @@
     <h1 class="text-2xl font-bold text-dm-text mb-1">Review</h1>
     <p class="text-dm-muted text-sm mb-8">Make sure that you choooosed all what you need.</p>
 
-    <!-- Read-only character summary card -->
     <div class="mb-8 p-6 rounded-xl bg-dm-surface border border-dm-muted/20">
       <h2 class="text-dm-accent font-bold text-lg mb-1">{{ wizard_data.name }}</h2>
-      <p class="text-dm-muted text-sm mb-6">{{ wizard_data.race|title }} · {{ wizard_data.character_class }}</p>
+      <p class="text-dm-muted text-sm mb-6">
+        {{ character.get_race_display }} · {{ character.get_character_class_display }}
+      </p>
 
       <div class="grid grid-cols-3 gap-3">
         <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
@@ -53,7 +53,6 @@
       </div>
     </div>
 
-    <!-- Background form -->
     <form method="post" action="{% url 'characters:create_step4' %}">
       {% csrf_token %}
 
