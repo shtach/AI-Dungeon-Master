@@ -10,6 +10,7 @@ WIZARD_SESSION_KEY = "character_wizard"
 class CharacterCreateStep1View(LoginRequiredMixin, View):
     def get(self, request):
         wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
+
         return render(request, "characters/create_step1.html", {"wizard_data": wizard_data})
 
     def post(self, request):
@@ -37,7 +38,7 @@ class CharacterCreateStep2View(LoginRequiredMixin, View):
         return render(
             request,
             "characters/create_step2.html",
-            {"wizard_data": wizard_data, "available_classes": Character.ClassChoices.values},
+            {"wizard_data": wizard_data, "available_classes": ["Warrior", "Wizard", "Rogue", "Cleric"]},
         )
 
     def post(self, request):
@@ -54,8 +55,8 @@ class CharacterCreateStep2View(LoginRequiredMixin, View):
 
 
 class CharacterCreateStep3View(LoginRequiredMixin, View):
-    STATS = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]
-    STANDARD_ARRAY = [15, 14, 13, 12, 10, 8]
+    STATS = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]  # same
+    STANDARD_ARRAY = [15, 14, 13, 12, 10, 8]  # must be implemented in another way
 
     def get(self, request):
         wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
@@ -120,6 +121,7 @@ class CharacterCreateStep4View(LoginRequiredMixin, View):
             wisdom=stats.get("wisdom"),
             charisma=stats.get("charisma"),
         )
+        character_preview.compute_derived_stats()
 
         return render(
             request, "characters/create_step4.html", {"wizard_data": wizard_data, "character": character_preview}
@@ -134,7 +136,7 @@ class CharacterCreateStep4View(LoginRequiredMixin, View):
         background = request.POST.get("background", "").strip()
         stats = wizard_data.get("stats", {})
 
-        character = Character.objects.create(
+        character = Character(
             user=request.user,
             name=wizard_data.get("name"),
             race=wizard_data.get("race"),
@@ -147,6 +149,7 @@ class CharacterCreateStep4View(LoginRequiredMixin, View):
             wisdom=stats.get("wisdom"),
             charisma=stats.get("charisma"),
         )
+        character.save()
 
         if WIZARD_SESSION_KEY in request.session:
             del request.session[WIZARD_SESSION_KEY]
