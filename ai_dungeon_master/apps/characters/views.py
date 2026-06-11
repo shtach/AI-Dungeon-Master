@@ -15,7 +15,11 @@ class CharacterCreateStep1View(LoginRequiredMixin, View):
 
     def post(self, request):
         name = request.POST.get("name", "").strip()
-        race = request.POST.get("race", "").strip()
+        race = request.POST.get("race", "").strip().upper()
+
+        if race not in Character.RaceChoices.values:
+            return redirect("characters:create_step1")
+
         wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
         wizard_data["name"] = name
         wizard_data["race"] = race
@@ -38,10 +42,9 @@ class CharacterCreateStep2View(LoginRequiredMixin, View):
         )
 
     def post(self, request):
-        character_class = request.POST.get("character_class", "").strip()
+        character_class = request.POST.get("character_class", "").strip().upper()
 
-        allowed_classes = ["Warrior", "Wizard", "Rogue", "Cleric"]
-        if character_class not in allowed_classes:
+        if character_class not in Character.ClassChoices.values:
             return redirect("characters:create_step2")
 
         wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
