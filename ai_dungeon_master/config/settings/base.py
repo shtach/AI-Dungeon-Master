@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "tailwind",
     "theme",
     "django_htmx",
+    "ai_dungeon_master.apps.ai",
     "ai_dungeon_master.apps.accounts",
     "ai_dungeon_master.apps.characters",
     "ai_dungeon_master.apps.game",
