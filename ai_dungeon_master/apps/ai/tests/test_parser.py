@@ -118,3 +118,124 @@ class TestCards:
             text = f"[CARD] Test | roll={stat} dc=10"
             result = parse_ai_response(text)
             assert result["cards"][0]["roll"] == stat
+
+
+class TestHpChange:
+    def test_positive(self):
+        text = "[HP_CHANGE] -5"
+        result = parse_ai_response(text)
+        assert result["hp_change"] == -5
+
+    def test_negative(self):
+        text = "[HP_CHANGE] +3"
+        result = parse_ai_response(text)
+        assert result["hp_change"] == 3
+
+    def test_missing(self):
+        result = parse_ai_response("[NARRATIVE] Nothing here.")
+        assert result["hp_change"] is None
+
+    def test_malformed(self):
+        text = "[HP_CHANGE] not_a_number"
+        result = parse_ai_response(text)
+        assert result["hp_change"] is None
+
+
+class TestCombatStart:
+    def test_full(self):
+        text = "[COMBAT_START] Goblin hp=20 ac=15 atk=4 dmg=6"
+        result = parse_ai_response(text)
+        combat = result["combat_start"]
+        assert combat["name"] == "Goblin"
+        assert combat["hp"] == 20
+        assert combat["ac"] == 15
+        assert combat["atk"] == 4
+        assert combat["dmg"] == 6
+
+    def test_partial(self):
+        text = "[COMBAT_START] Dragon hp=100"
+        result = parse_ai_response(text)
+        combat = result["combat_start"]
+        assert combat["name"] == "Dragon"
+        assert combat["hp"] == 100
+        assert combat["ac"] is None
+
+    def test_empty(self):
+        text = "[COMBAT_START]"
+        result = parse_ai_response(text)
+        assert result["combat_start"] is None
+
+    def test_missing(self):
+        result = parse_ai_response("[NARRATIVE] Peaceful day.")
+        assert result["combat_start"] is None
+
+    def test_multi_word_name(self):
+        text = "[COMBAT_START] Ancient Dragon hp=150 ac=19 atk=7 dmg=12"
+        result = parse_ai_response(text)
+        assert result["combat_start"]["name"] == "Ancient Dragon"
+
+
+class TestEnemyHp:
+    def test_basic(self):
+        text = "[ENEMY_HP] 15"
+        result = parse_ai_response(text)
+        assert result["enemy_hp"] == 15
+
+    def test_malformed(self):
+        text = "[ENEMY_HP] not_a_number"
+        result = parse_ai_response(text)
+        assert result["enemy_hp"] is None
+
+
+class TestCombatEnd:
+    def test_victory(self):
+        text = "[COMBAT_END] victory The goblin falls."
+        result = parse_ai_response(text)
+        assert result["combat_end"]["victory"] is True
+
+    def test_defeat(self):
+        text = "[COMBAT_END] defeat You collapse."
+        result = parse_ai_response(text)
+        assert result["combat_end"]["victory"] is False
+
+    def test_empty(self):
+        text = "[COMBAT_END]"
+        result = parse_ai_response(text)
+        assert result["combat_end"] is None
+
+
+class TestLoot:
+    def test_full(self):
+        text = "[LOOT] Magic Sword | weapon | dmg=1d8 hit=2 bonuses=fire | An ancient blade"
+        result = parse_ai_response(text)
+        loot = result["loot"]
+        assert loot["name"] == "Magic Sword"
+        assert loot["type"] == "weapon"
+        assert loot["dmg"] == "1d8"
+        assert loot["hit"] == 2
+        assert loot["bonuses"] == "fire"
+        assert loot["lore"] == "An ancient blade"
+
+    def test_minimal(self):
+        text = "[LOOT] Gold Coins"
+        result = parse_ai_response(text)
+        loot = result["loot"]
+        assert loot["name"] == "Gold Coins"
+        assert loot["type"] is None
+
+    def test_empty(self):
+        text = "[LOOT]"
+        result = parse_ai_response(text)
+        assert result["loot"] is None
+
+
+class TestQuest:
+    def test_offer(self):
+        text = "[QUEST_OFFER] Save the Village"
+        result = parse_ai_response(text)
+        assert result["quest_offer"] == "Save the Village"
+
+    def test_complete(self):
+        text = "[QUEST_COMPLETE] Save the Village"
+        result = parse_ai_response(text)
+        assert result["quest_complete"] == "Save the Village"
