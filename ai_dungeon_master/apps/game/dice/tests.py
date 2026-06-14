@@ -1,10 +1,9 @@
 import json
 import pytest
 from django.contrib.auth import get_user_model
-from django.test import Client
 
 from ai_dungeon_master.apps.characters.models import Character
-from ai_dungeon_master.apps.game.models import DiceRoll, GameSession, Message
+from ai_dungeon_master.apps.game.models import DiceRoll, GameSession
 from ai_dungeon_master.apps.world.models import Scenario, WorldSetting
 
 User = get_user_model()
