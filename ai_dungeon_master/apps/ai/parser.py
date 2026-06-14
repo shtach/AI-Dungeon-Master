@@ -48,3 +48,39 @@ def _clamp_narrative(text: str | None) -> str | None:
 
     logger.debug("Clamped narrative from %d to %d chars", len(text), len(truncated))
     return truncated
+
+
+_ROLL_RE = re.compile(r"roll=(\w+)")
+_DC_RE = re.compile(r"dc=(\d+)")
+_REQUIRES_RE = re.compile(r"requires=(\w+)")
+
+
+def _parse_card(raw: str) -> dict[str, Any]:
+    parts = [p.strip() for p in raw.split("|")]
+
+    label = _clamp_words(parts[0] if parts else "", LABEL_MAX_WORDS)
+    roll = None
+    dc = None
+    requires = None
+    detail = None
+
+    if len(parts) >= 2:
+        field_str = parts[1]
+        m_roll = _ROLL_RE.search(field_str)
+        if m_roll:
+            stat = m_roll.group(1).lower()
+            if stat in _STAT_KEYS:
+                roll = stat
+
+        m_dc = _DC_RE.search(field_str)
+        if m_dc:
+            dc = int(m_dc.group(1))
+
+        m_req = _REQUIRES_RE.search(field_str)
+        if m_req:
+            requires = m_req.group(1)
+
+    if len(parts) >= 3:
+        detail = _clamp_words(parts[2], DETAIL_MAX_WORDS)
+
+    return {"label": label, "roll": roll, "dc": dc, "requires": requires, "detail": detail}
