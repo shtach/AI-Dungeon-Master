@@ -84,3 +84,98 @@ def _parse_card(raw: str) -> dict[str, Any]:
         detail = _clamp_words(parts[2], DETAIL_MAX_WORDS)
 
     return {"label": label, "roll": roll, "dc": dc, "requires": requires, "detail": detail}
+
+
+_HP_RE = re.compile(r"hp=(-?\d+)")
+_AC_RE = re.compile(r"ac=(\d+)")
+_ATK_RE = re.compile(r"atk=(-?\d+)")
+_DMG_RE = re.compile(r"dmg=(-?\d+)")
+
+
+def _parse_hp_change(raw: str) -> int | None:
+    m = _HP_RE.search(raw)
+    if m:
+        return int(m.group(1))
+    raw = raw.strip()
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
+def _parse_combat_start(raw: str) -> dict[str, Any] | None:
+    if not raw.strip():
+        return None
+
+    hp_match = _HP_RE.search(raw)
+    if hp_match:
+        name = raw[: hp_match.start()].strip()
+    else:
+        name = raw.strip().split()[0] if raw.strip() else None
+    result: dict[str, Any] = {"name": name}
+
+    m = _HP_RE.search(raw)
+    result["hp"] = int(m.group(1)) if m else None
+
+    m = _AC_RE.search(raw)
+    result["ac"] = int(m.group(1)) if m else None
+
+    m = _ATK_RE.search(raw)
+    result["atk"] = int(m.group(1)) if m else None
+
+    m = _DMG_RE.search(raw)
+    result["dmg"] = int(m.group(1)) if m else None
+
+    return result
+
+
+def _parse_enemy_hp(raw: str) -> int | None:
+    raw = raw.strip()
+    try:
+        return int(raw.split()[0])
+    except (ValueError, IndexError):
+        return None
+
+
+def _parse_combat_end(raw: str) -> dict[str, Any] | None:
+    raw = raw.strip()
+    if not raw:
+        return None
+    victory = raw.lower().startswith("victory") or "victory" in raw.lower()
+    return {"victory": victory, "detail": _clamp_words(raw, DETAIL_MAX_WORDS)}
+
+
+def _parse_loot(raw: str) -> dict[str, Any] | None:
+    if not raw.strip():
+        return None
+
+    parts = [p.strip() for p in raw.split("|")]
+    result: dict[str, Any] = {
+        "name": parts[0] if parts else None,
+        "type": parts[1] if len(parts) >= 2 else None,
+    }
+
+    if len(parts) >= 3:
+        stats_str = parts[2]
+        result["dmg"] = None
+        result["hit"] = None
+        result["bonuses"] = None
+
+        m_dmg = re.search(r"dmg=(\S+)", stats_str)
+        if m_dmg:
+            result["dmg"] = m_dmg.group(1)
+
+        m_hit = re.search(r"hit=(-?\d+)", stats_str)
+        if m_hit:
+            result["hit"] = int(m_hit.group(1))
+
+        m_bon = re.search(r"bonuses=(\S+)", stats_str)
+        if m_bon:
+            result["bonuses"] = m_bon.group(1)
+
+    if len(parts) >= 4:
+        result["lore"] = _clamp_words(parts[3], DETAIL_MAX_WORDS)
+    else:
+        result["lore"] = None
+
+    return result
