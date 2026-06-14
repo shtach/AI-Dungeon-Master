@@ -1,3 +1,5 @@
+import logging
+
 from ai_dungeon_master.apps.ai.parser import (
     DETAIL_MAX_WORDS,
     LABEL_MAX_WORDS,
@@ -239,3 +241,86 @@ class TestQuest:
         text = "[QUEST_COMPLETE] Save the Village"
         result = parse_ai_response(text)
         assert result["quest_complete"] == "Save the Village"
+
+
+class TestMalformed:
+    def test_garbage_input(self):
+        result = parse_ai_response("!!!###$$$%%%")
+        assert result["narrative"] is None
+        assert result["cards"] == []
+
+    def test_partial_tags(self):
+        text = "[NARRATIVE] Valid narrative. [INVALID_TAG] stuff. [CARD]"
+        result = parse_ai_response(text)
+        assert result["narrative"] == "Valid narrative."
+
+    def test_no_exception_on_any_input(self):
+        inputs = [
+            None,
+            "",
+            "plain text",
+            "[NARRATIVE]",
+            "[CARD] |||",
+            "[HP_CHANGE] abc",
+            "[COMBAT_START] hp=xyz ac=abc",
+            "[LOOT] ||| ||| |||",
+            "[]",
+            "[",
+            "]",
+            "[][]",
+        ]
+        for inp in inputs:
+            try:
+                parse_ai_response(inp)
+            except Exception as e:
+                assert False, f"parse_ai_response raised {type(e).__name__}: {e}"
+
+
+class TestTruncationLogging:
+    def test_long_narrative_logged(self, caplog):
+        long_text = " ".join(["word"] * 200)
+        text = f"[NARRATIVE] {long_text}"
+        with caplog.at_level(logging.DEBUG, logger="ai_dungeon_master.apps.ai.parser"):
+            parse_ai_response(text)
+        assert any("Clamped narrative" in r.message for r in caplog.records)
+
+    def test_long_label_logged(self, caplog):
+        long_label = " ".join(["word"] * 20)
+        text = f"[CARD] {long_label}"
+        with caplog.at_level(logging.DEBUG, logger="ai_dungeon_master.apps.ai.parser"):
+            parse_ai_response(text)
+        assert any("Truncated text" in r.message for r in caplog.records)
+
+    def test_excess_cards_logged(self, caplog):
+        text = "\n".join(f"[CARD] Option {i}" for i in range(8))
+        with caplog.at_level(logging.WARNING, logger="ai_dungeon_master.apps.ai.parser"):
+            parse_ai_response(text)
+        assert any("trimmed to" in r.message for r in caplog.records)
+
+
+class TestFullResponse:
+    def test_all_tags(self):
+        text = (
+            "[NARRATIVE] You see a dragon on the mountain.\n"
+            "[CARD] Fight the dragon | roll=strength dc=20 | Risky but rewarding\n"
+            "[CARD] Sneak past | roll=dexterity dc=15\n"
+            "[CARD] Negotiate | roll=charisma dc=12\n"
+            "[CARD] Retreat\n"
+            "[HP_CHANGE] -3\n"
+            "[QUEST_OFFER] Slay the Dragon\n"
+            "[COMBAT_START] Ancient Dragon hp=150 ac=19 atk=7 dmg=12"
+        )
+        result = parse_ai_response(text)
+        assert result["narrative"] == "You see a dragon on the mountain."
+        assert len(result["cards"]) == 4
+        assert result["hp_change"] == -3
+        assert result["quest_offer"] == "Slay the Dragon"
+        assert result["combat_start"]["name"] == "Ancient Dragon"
+        assert result["combat_start"]["hp"] == 150
+
+    def test_empty_response(self):
+        result = parse_ai_response("")
+        for key in ["narrative", "hp_change", "quest_offer", "quest_complete",
+                     "combat_start", "enemy_hp", "combat_end", "loot"]:
+            assert result[key] is None
+        assert result["cards"] == []
