@@ -121,6 +121,11 @@ class CardClickView(LoginRequiredMixin, View):
 
         hp_payload = _apply_hp_change(session, parsed.get("hp_change"))
 
+        loot = parsed.get("loot")
+        if loot:
+            session.pending_loot = loot
+            session.save(update_fields=["pending_loot"])
+
         if card_roll:
             dice_payload = {
                 "roll": card_roll,
@@ -193,6 +198,11 @@ class ResolveView(LoginRequiredMixin, View):
         )
 
         hp_payload = _apply_hp_change(session, parsed.get("hp_change"))
+
+        loot = parsed.get("loot")
+        if loot:
+            session.pending_loot = loot
+            session.save(update_fields=["pending_loot"])
 
         session.turn_count += 1
         session.save(update_fields=["turn_count"])
