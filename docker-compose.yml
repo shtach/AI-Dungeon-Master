@@ -47,6 +47,13 @@ services:
       - .env
     environment:
       DB_HOST: postgres_db
+      # Reach an Ollama running natively on the host by default (recommended).
+      # Override OLLAMA_HOST in .env to http://ollama:11434 to use the optional
+      # `ollama` compose service below (`--profile local-ai`).
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+    # Lets the container resolve host.docker.internal on Linux hosts too.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz/', timeout=5)"]
       interval: 10s
@@ -70,6 +77,21 @@ services:
       - .env
     environment:
       DB_HOST: postgres_db
- 
+
+  # Optional self-contained Ollama engine (CPU-only). Off by default — start it
+  # with `docker compose --profile local-ai up`, then set
+  # OLLAMA_HOST=http://ollama:11434 in .env. For most machines, running Ollama
+  # natively on the host (the default OLLAMA_HOST above) is simpler.
+  ollama:
+    image: ollama/ollama:latest
+    container_name: game_ollama
+    profiles: ["local-ai"]
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+
 volumes:
   pgdata:
+  ollama_models:
