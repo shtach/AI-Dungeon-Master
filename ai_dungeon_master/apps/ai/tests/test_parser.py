@@ -277,22 +277,25 @@ class TestMalformed:
 
 
 class TestTruncationLogging:
-    def test_long_narrative_logged(self, caplog):
+    def test_long_narrative_logged(self, caplog, monkeypatch):
         long_text = " ".join(["word"] * 200)
         text = f"[NARRATIVE] {long_text}"
+        monkeypatch.setattr(logging.getLogger("ai_dungeon_master.apps.ai.parser"), "propagate", True)
         with caplog.at_level(logging.DEBUG, logger="ai_dungeon_master.apps.ai.parser"):
             parse_ai_response(text)
         assert any("Clamped narrative" in r.message for r in caplog.records)
 
-    def test_long_label_logged(self, caplog):
+    def test_long_label_logged(self, caplog, monkeypatch):
         long_label = " ".join(["word"] * 20)
         text = f"[CARD] {long_label}"
+        monkeypatch.setattr(logging.getLogger("ai_dungeon_master.apps.ai.parser"), "propagate", True)
         with caplog.at_level(logging.DEBUG, logger="ai_dungeon_master.apps.ai.parser"):
             parse_ai_response(text)
         assert any("Truncated text" in r.message for r in caplog.records)
 
-    def test_excess_cards_logged(self, caplog):
+    def test_excess_cards_logged(self, caplog, monkeypatch):
         text = "\n".join(f"[CARD] Option {i}" for i in range(8))
+        monkeypatch.setattr(logging.getLogger("ai_dungeon_master.apps.ai.parser"), "propagate", True)
         with caplog.at_level(logging.WARNING, logger="ai_dungeon_master.apps.ai.parser"):
             parse_ai_response(text)
         assert any("trimmed to" in r.message for r in caplog.records)
