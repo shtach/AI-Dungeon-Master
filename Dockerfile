@@ -38,11 +38,12 @@ COPY . .
 # Create static directory to suppress staticfiles.W004 warning
 RUN mkdir -p static
 
-# Download & cache the Tailwind standalone binary into the image, then build the
-# CSS bundle once. Caching the binary here makes `tailwind start`/`build` a no-op
-# download on container start, and the baked stylesheet gives prod-like images
-# (collectstatic + whitenoise) a ready bundle without a build step at runtime.
-RUN python manage.py tailwind build
+# Download & cache the Tailwind standalone binary into the image. The binary
+# lives in site-packages (outside /app), so it survives the bind mount and makes
+# `tailwind build`/`start` a no-op download on container start. The CSS bundle
+# itself is compiled at runtime: by the `web` service for dev, and as a release
+# step (tailwind build + collectstatic) for prod-like images.
+RUN python manage.py tailwind install
 
 # Expose Django's default port
 # Note: EXPOSE is documentation only, doesn't actually publish the port
