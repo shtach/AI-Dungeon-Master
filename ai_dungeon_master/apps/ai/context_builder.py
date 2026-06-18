@@ -15,7 +15,7 @@ def build_prompt(session, user_message):
     quests_section = ""
     if active_quests.exists():
         quest_lines = [f"- {q.title}: {q.description}" for q in active_quests]
-        quests_section = f"\n=== ACTIVE QUESTS ===\n" + "\n".join(quest_lines) + "\n"
+        quests_section = "\n=== ACTIVE QUESTS ===\n" + "\n".join(quest_lines) + "\n"
 
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
         world_name=world.name if world else "Unknown",
