@@ -59,6 +59,15 @@ binary download happens on container start.
 > (pinned via `TAILWINDCSS_VERSION` in the `Dockerfile`), so container starts never
 > hit the network for it.
 
+> **Live CSS reload on Windows:** the watcher relies on filesystem events, which
+> **do not cross a Windows-filesystem bind mount** (`C:\...` mounted into the Linux
+> container) — Tailwind v4 has no polling mode, so edits won't auto-rebuild there.
+> Either keep the repo on the **WSL2 filesystem** (e.g. `~/projects/...` inside
+> WSL) for working live reload, or rebuild manually with
+> `docker compose restart tailwind` / `docker compose exec web python manage.py tailwind build`.
+> The page is always styled on startup regardless, because `web` builds the CSS
+> before serving. On Linux/macOS (and WSL2-hosted repos) live reload works out of the box.
+
 ### 4. (Optional) Create a superuser
 
 In a separate terminal while containers are running:
