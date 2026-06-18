@@ -413,6 +413,22 @@ python manage.py collectstatic
 python manage.py tailwind build
 ```
 
+### Reseeding world data
+
+`seed_data` is **idempotent**: if any world already exists it skips and leaves
+the database untouched — safe to run on every container start.
+
+To **reload** the bundled worlds and scenarios into an existing database (e.g.
+after editing `fixtures/initial_data.json`) without wiping volumes:
+
+```bash
+python manage.py seed_data --force
+```
+
+`--force` reloads the fixture as an **upsert by primary key**: existing worlds
+and scenarios are overwritten in place, so no duplicates are created. Without
+`--force` the command never overwrites existing data.
+
 ---
 
 ## Troubleshooting
