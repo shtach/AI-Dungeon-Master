@@ -34,6 +34,7 @@ class GameSession(models.Model):
     summary = models.TextField(
         blank=True, help_text="Summary of old events for AI context"
     )
+    pending_loot = models.JSONField(null=True, blank=True, help_text="Pending loot from AI")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
