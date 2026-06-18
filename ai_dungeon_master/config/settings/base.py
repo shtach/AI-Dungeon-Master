@@ -117,6 +117,12 @@ GEMINI_API_KEY = get_env("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite")
 AI_PROVIDER = os.environ.get("AI_PROVIDER", "gemini")
 
+# Local Ollama engine. Host default is localhost; under docker-compose the `web`
+# service overrides OLLAMA_HOST to http://host.docker.internal:11434 to reach an
+# Ollama running natively on the host. OLLAMA_MODEL is the pulled model name.
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma3")
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ==========================================
