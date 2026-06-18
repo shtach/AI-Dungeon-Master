@@ -40,13 +40,33 @@ docker compose up
 
 Docker will automatically:
 
-- build the Python image
+- build the Python image (the Tailwind standalone binary is downloaded and
+  cached **once** during the image build)
 - start PostgreSQL and wait until it is ready
-- run `migrate`
-- start Django at [http://localhost:8000](http://localhost:8000)
-- start the Tailwind CSS watcher
+- run `migrate` and `seed_data`
+- compile the CSS bundle **before** the server starts, so the first page load is
+  already styled
+- start Django at [http://localhost:8000](http://localhost:8000) and report
+  health via the `/healthz/` endpoint
+- start the Tailwind CSS watcher (rebuilds CSS on change during development)
 
-First build takes ~2 minutes. Subsequent starts are near-instant.
+First build takes ~2 minutes. Subsequent starts are near-instant — no Tailwind
+binary download happens on container start.
+
+> **How styling works in Docker:** the `web` service runs `tailwind build` before
+> `runserver`, so the page is styled on first load. The `tailwind` service only
+> *watches* for changes afterwards. The standalone binary is cached in the image
+> (pinned via `TAILWINDCSS_VERSION` in the `Dockerfile`), so container starts never
+> hit the network for it.
+
+> **Live CSS reload on Windows:** the watcher relies on filesystem events, which
+> **do not cross a Windows-filesystem bind mount** (`C:\...` mounted into the Linux
+> container) — Tailwind v4 has no polling mode, so edits won't auto-rebuild there.
+> Either keep the repo on the **WSL2 filesystem** (e.g. `~/projects/...` inside
+> WSL) for working live reload, or rebuild manually with
+> `docker compose restart tailwind` / `docker compose exec web python manage.py tailwind build`.
+> The page is always styled on startup regardless, because `web` builds the CSS
+> before serving. On Linux/macOS (and WSL2-hosted repos) live reload works out of the box.
 
 ### 4. (Optional) Create a superuser
 
@@ -413,21 +433,23 @@ python manage.py collectstatic
 python manage.py tailwind build
 ```
 
-### Reseeding world data
+### Static files in production (prod-like)
 
-`seed_data` is **idempotent**: if any world already exists it skips and leaves
-the database untouched — safe to run on every container start.
-
-To **reload** the bundled worlds and scenarios into an existing database (e.g.
-after editing `fixtures/initial_data.json`) without wiping volumes:
+The dev server (`runserver`) serves static files automatically, so no
+`collectstatic` step is needed locally. For a **prod-like** deployment
+(`config.settings.production`, served by Gunicorn + WhiteNoise) the CSS bundle
+and other assets must be collected into `STATIC_ROOT`:
 
 ```bash
-python manage.py seed_data --force
+python manage.py tailwind build          # compile CSS into the bundle
+python manage.py collectstatic --no-input
 ```
 
-`--force` reloads the fixture as an **upsert by primary key**: existing worlds
-and scenarios are overwritten in place, so no duplicates are created. Without
-`--force` the command never overwrites existing data.
+Both run as a **build/deploy step**, not at container runtime. The Docker image
+caches the Tailwind binary (so `tailwind build` never re-downloads), but the CSS
+bundle itself is compiled here — run `tailwind build` then `collectstatic` in the
+release/entrypoint phase before Gunicorn starts. WhiteNoise then serves the
+hashed files via `CompressedManifestStaticFilesStorage`.
 
 ---
 

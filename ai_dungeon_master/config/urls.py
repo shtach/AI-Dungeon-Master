@@ -4,6 +4,7 @@ from django.conf import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", include("ai_dungeon_master.apps.core.urls")),
     path("accounts/", include("ai_dungeon_master.apps.accounts.urls")),
     path("", include("ai_dungeon_master.apps.game.urls")),
     path("characters/", include("ai_dungeon_master.apps.characters.urls")),
