@@ -106,6 +106,12 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 FIXTURE_DIRS = [BASE_DIR / "fixtures"]
 
 TAILWIND_APP_NAME = "theme"
+# `tailwind start` runs the standalone CLI watcher. `--watch=always` keeps it
+# watching when stdin is closed (the case under docker-compose / headless), so
+# the watcher container does not exit after the first build.
+TAILWIND_STANDALONE_START_COMMAND_ARGS = (
+    "-i static_src/src/styles.css -o static/css/dist/styles.css --watch=always"
+)
 
 GEMINI_API_KEY = get_env("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite")
