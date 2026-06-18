@@ -40,8 +40,8 @@ docker compose up
 
 Docker will automatically:
 
-- build the Python image (the Tailwind standalone binary is downloaded **once**
-  during the image build and the CSS bundle is compiled into the image)
+- build the Python image (the Tailwind standalone binary is downloaded and
+  cached **once** during the image build)
 - start PostgreSQL and wait until it is ready
 - run `migrate` and `seed_data`
 - compile the CSS bundle **before** the server starts, so the first page load is
@@ -432,15 +432,15 @@ The dev server (`runserver`) serves static files automatically, so no
 and other assets must be collected into `STATIC_ROOT`:
 
 ```bash
-python manage.py tailwind build          # compile CSS (baked into the Docker image already)
+python manage.py tailwind build          # compile CSS into the bundle
 python manage.py collectstatic --no-input
 ```
 
-`collectstatic` runs as a **build/deploy step**, not at container runtime. The
-Docker image already compiles the Tailwind bundle during the build, so a
-prod-like image only needs `collectstatic` (e.g. in the release/entrypoint
-phase) before Gunicorn starts. WhiteNoise then serves the hashed files via
-`CompressedManifestStaticFilesStorage`.
+Both run as a **build/deploy step**, not at container runtime. The Docker image
+caches the Tailwind binary (so `tailwind build` never re-downloads), but the CSS
+bundle itself is compiled here — run `tailwind build` then `collectstatic` in the
+release/entrypoint phase before Gunicorn starts. WhiteNoise then serves the
+hashed files via `CompressedManifestStaticFilesStorage`.
 
 ---
 
