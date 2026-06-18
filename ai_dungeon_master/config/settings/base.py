@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "ai_dungeon_master.apps.accounts",
     "ai_dungeon_master.apps.characters",
     "ai_dungeon_master.apps.game",
+    "ai_dungeon_master.apps.game.combat",
     "ai_dungeon_master.apps.world",
     "ai_dungeon_master.apps.core",
 ]
