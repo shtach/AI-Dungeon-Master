@@ -27,7 +27,26 @@ def _filter_cards_by_inventory(cards: list, character: Character) -> list:
     return [c for c in cards if not c.get("requires") or c["requires"] in inventory_names]
 
 
-def _build_response_payload(parsed: dict, dice_payload: dict | None = None) -> dict:
+def _apply_hp_change(session: GameSession, hp_change: int | None) -> dict:
+    if hp_change is None:
+        return {}
+
+    character = session.character
+    character.current_hp = max(0, min(character.max_hp, character.current_hp + hp_change))
+    character.save(update_fields=["current_hp"])
+
+    if character.current_hp == 0 and session.status == GameSession.StatusChoices.ACTIVE:
+        session.status = GameSession.StatusChoices.DEAD
+        session.save(update_fields=["status"])
+
+    return {
+        "hp_change": hp_change,
+        "current_hp": character.current_hp,
+        "max_hp": character.max_hp,
+    }
+
+
+def _build_response_payload(parsed: dict, dice_payload: dict | None = None, hp_payload: dict | None = None) -> dict:
     payload = {
         "narrative": parsed.get("narrative"),
         "cards": parsed.get("cards", []),
@@ -41,6 +60,10 @@ def _build_response_payload(parsed: dict, dice_payload: dict | None = None) -> d
     }
     if dice_payload:
         payload["dice"] = dice_payload
+    if hp_payload:
+        payload["current_hp"] = hp_payload["current_hp"]
+        payload["max_hp"] = hp_payload["max_hp"]
+        payload["is_dead"] = hp_payload["current_hp"] == 0
     return payload
 
 
@@ -96,17 +119,19 @@ class CardClickView(LoginRequiredMixin, View):
             parsed.get("cards", []), session.character
         )
 
+        hp_payload = _apply_hp_change(session, parsed.get("hp_change"))
+
         if card_roll:
             dice_payload = {
                 "roll": card_roll,
                 "dc": card_dc,
             }
-            return JsonResponse(_build_response_payload(parsed, dice_payload))
+            return JsonResponse(_build_response_payload(parsed, dice_payload, hp_payload))
 
         session.turn_count += 1
         session.save(update_fields=["turn_count"])
 
-        return JsonResponse(_build_response_payload(parsed))
+        return JsonResponse(_build_response_payload(parsed, hp_payload=hp_payload))
 
 
 class ResolveView(LoginRequiredMixin, View):
@@ -167,7 +192,9 @@ class ResolveView(LoginRequiredMixin, View):
             parsed.get("cards", []), session.character
         )
 
+        hp_payload = _apply_hp_change(session, parsed.get("hp_change"))
+
         session.turn_count += 1
         session.save(update_fields=["turn_count"])
 
-        return JsonResponse(_build_response_payload(parsed))
+        return JsonResponse(_build_response_payload(parsed, hp_payload=hp_payload))

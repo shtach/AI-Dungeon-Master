@@ -225,3 +225,65 @@ def test_ai_error_graceful(client, user, game_session, monkeypatch):
     assert response2.status_code == 503
     data2 = response2.json()
     assert "error" in data2
+
+
+def test_damage_applies(client, user, game_session, monkeypatch):
+    from ai_dungeon_master.apps.ai.providers.mock import MockProvider
+
+    game_session.character.current_hp = 10
+    game_session.character.save(update_fields=["current_hp"])
+    monkeypatch.setattr(
+        "ai_dungeon_master.apps.game.turn_views.get_ai_client",
+        lambda: MockProvider(response="[NARRATIVE]Burn![/NARRATIVE][HP_CHANGE]-3[/HP_CHANGE]"),
+    )
+
+    client.force_login(user)
+    resp = client.post(f"/session/{game_session.id}/message/", data=json.dumps({"label": "Fight"}), content_type="application/json")
+    data = resp.json()
+
+    assert resp.status_code == 200
+    assert data["hp_change"] == -3
+    assert data["current_hp"] == 7
+    game_session.character.refresh_from_db()
+    assert game_session.character.current_hp == 7
+
+
+def test_heal_clamps_to_max(client, user, game_session, monkeypatch):
+    from ai_dungeon_master.apps.ai.providers.mock import MockProvider
+
+    game_session.character.current_hp = 8
+    game_session.character.save(update_fields=["current_hp"])
+    monkeypatch.setattr(
+        "ai_dungeon_master.apps.game.turn_views.get_ai_client",
+        lambda: MockProvider(response="[NARRATIVE]Heal![/NARRATIVE][HP_CHANGE]+5[/HP_CHANGE]"),
+    )
+
+    client.force_login(user)
+    resp = client.post(f"/session/{game_session.id}/message/", data=json.dumps({"label": "Heal"}), content_type="application/json")
+    data = resp.json()
+
+    assert resp.status_code == 200
+    assert data["current_hp"] == game_session.character.max_hp
+    game_session.character.refresh_from_db()
+    assert game_session.character.current_hp == game_session.character.max_hp
+
+
+def test_zero_marks_dead(client, user, game_session, monkeypatch):
+    from ai_dungeon_master.apps.ai.providers.mock import MockProvider
+
+    game_session.character.current_hp = 2
+    game_session.character.save(update_fields=["current_hp"])
+    monkeypatch.setattr(
+        "ai_dungeon_master.apps.game.turn_views.get_ai_client",
+        lambda: MockProvider(response="[NARRATIVE]Fatal![/NARRATIVE][HP_CHANGE]-5[/HP_CHANGE]"),
+    )
+
+    client.force_login(user)
+    resp = client.post(f"/session/{game_session.id}/message/", data=json.dumps({"label": "Kill"}), content_type="application/json")
+    data = resp.json()
+
+    assert resp.status_code == 200
+    assert data["current_hp"] == 0
+    assert data["is_dead"] is True
+    game_session.refresh_from_db()
+    assert game_session.status == GameSession.StatusChoices.DEAD
