@@ -1,12 +1,14 @@
 from django.urls import include, path
-from . import views
+from . import session_views
+from . import turn_views
 
 app_name = "game"
 
 urlpatterns = [
-    path("", views.DashboardView.as_view(), name="dashboard"),
-    path("session/new/", views.CreateSessionView.as_view(), name="create_session"),
-    path("session/<int:session_id>/", views.GameSessionView.as_view(), name="session"),
-    path("session/<int:session_id>/message/", views.SendMessageView.as_view(), name="send_message"),
+    path("", session_views.DashboardView.as_view(), name="dashboard"),
+    path("session/new/", session_views.CreateSessionView.as_view(), name="create_session"),
+    path("session/<int:session_id>/", session_views.GameSessionView.as_view(), name="session"),
+    path("session/<int:session_id>/message/", turn_views.CardClickView.as_view(), name="card_click"),
+    path("session/<int:session_id>/resolve/", turn_views.ResolveView.as_view(), name="resolve"),
     path("dice/", include("ai_dungeon_master.apps.game.dice.urls")),
 ]

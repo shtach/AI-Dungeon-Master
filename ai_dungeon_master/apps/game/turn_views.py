@@ -1,0 +1,173 @@
+import json
+import logging
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.views import View
+
+from ai_dungeon_master.apps.ai.client import get_ai_client
+from ai_dungeon_master.apps.ai.context_builder import build_prompt
+from ai_dungeon_master.apps.ai.exceptions import AIClientError, AIProviderError
+from ai_dungeon_master.apps.ai.parser import parse_ai_response
+from ai_dungeon_master.apps.characters.models import Character
+from ai_dungeon_master.apps.game.models import GameSession, Message
+
+logger = logging.getLogger("ai_dungeon_master.apps.game.turn_views")
+
+
+def _error_payload(message: str, status: int = 500) -> JsonResponse:
+    return JsonResponse({"error": message}, status=status)
+
+
+def _filter_cards_by_inventory(cards: list, character: Character) -> list:
+    inventory_names = set(
+        character.inventory.values_list("name", flat=True).values_list("name", flat=True)
+    )
+    return [c for c in cards if not c.get("requires") or c["requires"] in inventory_names]
+
+
+def _build_response_payload(parsed: dict, dice_payload: dict | None = None) -> dict:
+    payload = {
+        "narrative": parsed.get("narrative"),
+        "cards": parsed.get("cards", []),
+        "hp_change": parsed.get("hp_change"),
+        "quest_offer": parsed.get("quest_offer"),
+        "quest_complete": parsed.get("quest_complete"),
+        "combat_start": parsed.get("combat_start"),
+        "enemy_hp": parsed.get("enemy_hp"),
+        "combat_end": parsed.get("combat_end"),
+        "loot": parsed.get("loot"),
+    }
+    if dice_payload:
+        payload["dice"] = dice_payload
+    return payload
+
+
+class CardClickView(LoginRequiredMixin, View):
+    def post(self, request, session_id):
+        session = get_object_or_404(
+            GameSession.objects.select_related("character", "world", "scenario"),
+            id=session_id,
+            user=request.user,
+        )
+
+        try:
+            body = json.loads(request.body)
+        except json.JSONDecodeError:
+            return _error_payload("Invalid JSON", 400)
+
+        label = body.get("label", "").strip()
+        card_roll = body.get("roll")
+        card_dc = body.get("dc")
+
+        if not label:
+            return _error_payload("Label is required", 400)
+
+        Message.objects.create(
+            session=session,
+            role=Message.RoleChoices.USER,
+            content=label,
+        )
+
+        try:
+            ai_client = get_ai_client()
+            full_prompt = build_prompt(session, label)
+            ai_response_text = ai_client.generate(full_prompt)
+        except AIProviderError as e:
+            logger.warning("AI provider error: %s", e)
+            return _error_payload("AI service temporarily unavailable. Please try again.", 503)
+        except AIClientError as e:
+            logger.error("AI client configuration error: %s", e)
+            return _error_payload("AI service configuration error.", 500)
+        except Exception as e:
+            logger.error("Unexpected error calling AI: %s", e)
+            return _error_payload("An unexpected error occurred.", 500)
+
+        parsed = parse_ai_response(ai_response_text)
+
+        Message.objects.create(
+            session=session,
+            role=Message.RoleChoices.ASSISTANT,
+            content=ai_response_text,
+        )
+
+        parsed["cards"] = _filter_cards_by_inventory(
+            parsed.get("cards", []), session.character
+        )
+
+        if card_roll:
+            dice_payload = {
+                "roll": card_roll,
+                "dc": card_dc,
+            }
+            return JsonResponse(_build_response_payload(parsed, dice_payload))
+
+        session.turn_count += 1
+        session.save(update_fields=["turn_count"])
+
+        return JsonResponse(_build_response_payload(parsed))
+
+
+class ResolveView(LoginRequiredMixin, View):
+    def post(self, request, session_id):
+        session = get_object_or_404(
+            GameSession.objects.select_related("character", "world", "scenario"),
+            id=session_id,
+            user=request.user,
+        )
+
+        try:
+            body = json.loads(request.body)
+        except json.JSONDecodeError:
+            return _error_payload("Invalid JSON", 400)
+
+        roll_result = body.get("roll_result")
+        roll_total = body.get("roll_total")
+        roll_success = body.get("roll_success")
+        original_label = body.get("label", "action")
+
+        if roll_result is None or roll_total is None:
+            return _error_payload("roll_result and roll_total are required", 400)
+
+        resolve_message = (
+            f"{original_label} (Roll: {roll_result}, Total: {roll_total}, "
+            f"{'Success' if roll_success else 'Failure'})"
+        )
+
+        Message.objects.create(
+            session=session,
+            role=Message.RoleChoices.USER,
+            content=resolve_message,
+        )
+
+        try:
+            ai_client = get_ai_client()
+            full_prompt = build_prompt(session, resolve_message)
+            ai_response_text = ai_client.generate(full_prompt)
+        except AIProviderError as e:
+            logger.warning("AI provider error on resolve: %s", e)
+            return _error_payload("AI service temporarily unavailable. Please try again.", 503)
+        except AIClientError as e:
+            logger.error("AI client configuration error on resolve: %s", e)
+            return _error_payload("AI service configuration error.", 500)
+        except Exception as e:
+            logger.error("Unexpected error calling AI on resolve: %s", e)
+            return _error_payload("An unexpected error occurred.", 500)
+
+        parsed = parse_ai_response(ai_response_text)
+
+        Message.objects.create(
+            session=session,
+            role=Message.RoleChoices.ASSISTANT,
+            content=ai_response_text,
+        )
+
+        parsed["cards"] = _filter_cards_by_inventory(
+            parsed.get("cards", []), session.character
+        )
+
+        session.turn_count += 1
+        session.save(update_fields=["turn_count"])
+
+        return JsonResponse(_build_response_payload(parsed))
