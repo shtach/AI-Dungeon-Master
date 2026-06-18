@@ -61,14 +61,18 @@ jobs:
         run: python manage.py migrate --no-input
 
       - name: 🧪 Run tests
+        # Run the suite via pytest, NEVER `manage.py test` — the latter silently
+        # skips pytest-style tests. AI_PROVIDER=mock forces the offline MockProvider
+        # so no test can reach a real AI model over the network.
         env:
           DJANGO_SETTINGS_MODULE: ai_dungeon_master.config.settings.test
+          AI_PROVIDER: mock
           DB_NAME: test_ai_dungeon
           DB_USER: postgres
           DB_PASSWORD: postgres_test_password
           DB_HOST: localhost
           DB_PORT: "5432"
-        run: pytest --tb=short -q
+        run: pytest --cov=ai_dungeon_master --cov-report=term-missing --tb=short -q
 
       - name: 🔍 Check for missing migrations
         # Any model change must include its migration in the same commit.
