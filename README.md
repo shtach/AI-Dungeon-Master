@@ -382,6 +382,41 @@ AI_PROVIDER=mock
 
 Useful for running tests or working offline.
 
+### Local Ollama provider (no API limits)
+
+[Ollama](https://ollama.com) runs an LLM locally, sidestepping Gemini's rate
+limits — handy for development and heavy play.
+
+1. Install Ollama (latest — we do **not** pin the engine version).
+2. Pull a model: `ollama pull gemma3`
+3. Configure `.env`:
+
+   ```env
+   AI_PROVIDER=ollama
+   OLLAMA_HOST=http://localhost:11434
+   OLLAMA_MODEL=gemma3
+   ```
+
+Under docker-compose the `web` container reaches an Ollama running natively on
+the host via `OLLAMA_HOST=http://host.docker.internal:11434`.
+
+**Engine vs model:** Ollama is the engine (`localhost:11434`); the *model* is
+what you `ollama pull` and select with `OLLAMA_MODEL`. The DM only has to follow
+our tag format (`[NARRATIVE]`, `[CARD]`, …) and never invent dice — pick an
+instruction-following model, not a reasoning (`deepseek-r1`) or `*-coder` one.
+Verify current names on [ollama.com](https://ollama.com) before pulling:
+
+| Target | `OLLAMA_MODEL` | Notes |
+|--------|----------------|-------|
+| Default (laptop) | `gemma3` (≈4B) | strong structured output, ~6 GB, runs on a plain laptop |
+| Small, multilingual (incl. Polish) | `qwen3:8b` | strongest non-English following at this size |
+| 16 GB available | `mistral-small3.1` | near-70B quality at ~14 GB |
+| CPU-only fallback | `gemma3:1b` | last resort, weaker tag discipline |
+
+The first turn after a cold start is slow (the model loads into memory) — that
+is expected. Lighter models need a stricter, example-led prompt to hold the tag
+format.
+
 ---
 
 ## Project structure
