@@ -233,9 +233,9 @@ class TestLoot:
 
 class TestQuest:
     def test_offer(self):
-        text = "[QUEST_OFFER] Save the Village"
+        text = "[QUEST_OFFER]title=Save the Village|description=Defend the town[/QUEST_OFFER]"
         result = parse_ai_response(text)
-        assert result["quest_offer"] == "Save the Village"
+        assert result["quest_offer"] == {"title": "Save the Village", "description": "Defend the town"}
 
     def test_complete(self):
         text = "[QUEST_COMPLETE] Save the Village"
@@ -310,14 +310,14 @@ class TestFullResponse:
             "[CARD] Negotiate | roll=charisma dc=12\n"
             "[CARD] Retreat\n"
             "[HP_CHANGE] -3\n"
-            "[QUEST_OFFER] Slay the Dragon\n"
+            "[QUEST_OFFER]title=Slay the Dragon|description=Defeat the beast[/QUEST_OFFER]\n"
             "[COMBAT_START] Ancient Dragon hp=150 ac=19 atk=7 dmg=12"
         )
         result = parse_ai_response(text)
         assert result["narrative"] == "You see a dragon on the mountain."
         assert len(result["cards"]) == 4
         assert result["hp_change"] == -3
-        assert result["quest_offer"] == "Slay the Dragon"
+        assert result["quest_offer"] == {"title": "Slay the Dragon", "description": "Defeat the beast"}
         assert result["combat_start"]["name"] == "Ancient Dragon"
         assert result["combat_start"]["hp"] == 150
 

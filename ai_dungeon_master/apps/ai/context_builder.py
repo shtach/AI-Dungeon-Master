@@ -11,6 +11,12 @@ def build_prompt(session, user_message):
     if session.summary and session.summary.strip():
         summary_section = f"\n=== SESSION SUMMARY ===\n{session.summary.strip()}\n"
 
+    active_quests = session.quests.filter(status="ACTIVE")
+    quests_section = ""
+    if active_quests.exists():
+        quest_lines = [f"- {q.title}: {q.description}" for q in active_quests]
+        quests_section = "\n=== ACTIVE QUESTS ===\n" + "\n".join(quest_lines) + "\n"
+
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
         world_name=world.name if world else "Unknown",
         world_description=world.description if world else "No description",
@@ -54,5 +60,5 @@ def build_prompt(session, user_message):
     if transcript:
         transcript = f"{transcript}\n"
 
-    final_prompt = f"{system_prompt}\n{transcript}[Player]: {user_message}\n[DM]:"
+    final_prompt = f"{system_prompt}{quests_section}\n{transcript}[Player]: {user_message}\n[DM]:"
     return final_prompt

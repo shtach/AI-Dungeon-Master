@@ -145,6 +145,20 @@ def _parse_combat_end(raw: str) -> dict[str, Any] | None:
     return {"victory": victory, "detail": _clamp_words(raw, DETAIL_MAX_WORDS)}
 
 
+def _parse_quest_offer(raw: str) -> dict[str, Any] | None:
+    if not raw or not raw.strip():
+        return None
+    parts = [p.strip() for p in raw.split("|")]
+    result: dict[str, Any] = {"title": "Untitled Quest", "description": ""}
+    for part in parts:
+        if "=" in part:
+            key, value = part.split("=", 1)
+            key = key.strip().lower()
+            if key in ("title", "description"):
+                result[key] = value.strip()
+    return result
+
+
 def _parse_loot(raw: str) -> dict[str, Any] | None:
     if not raw.strip():
         return None
@@ -216,7 +230,7 @@ def parse_ai_response(text: str) -> dict[str, Any]:
     hp_change = _parse_hp_change(hp_raw) if hp_raw else None
 
     quest_offer_raw = tags.get("QUEST_OFFER", [None])[0]
-    quest_offer = quest_offer_raw.strip() if quest_offer_raw else None
+    quest_offer = _parse_quest_offer(quest_offer_raw) if quest_offer_raw else None
 
     quest_complete_raw = tags.get("QUEST_COMPLETE", [None])[0]
     quest_complete = quest_complete_raw.strip() if quest_complete_raw else None

@@ -11,6 +11,7 @@ urlpatterns = [
     path("session/<int:session_id>/message/", turn_views.CardClickView.as_view(), name="card_click"),
     path("session/<int:session_id>/resolve/", turn_views.ResolveView.as_view(), name="resolve"),
     path("session/<int:session_id>/loot/", include("ai_dungeon_master.apps.game.loot.urls")),
+    path("session/<int:session_id>/quest/", include("ai_dungeon_master.apps.game.quests.urls")),
     path("dice/", include("ai_dungeon_master.apps.game.dice.urls")),
     path("combat/", include("ai_dungeon_master.apps.game.combat.urls")),
 ]
