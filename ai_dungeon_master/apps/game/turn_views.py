@@ -12,6 +12,7 @@ from ai_dungeon_master.apps.ai.exceptions import AIClientError, AIProviderError
 from ai_dungeon_master.apps.ai.parser import parse_ai_response
 from ai_dungeon_master.apps.characters.models import Character
 from ai_dungeon_master.apps.game.models import GameSession, Message
+from ai_dungeon_master.apps.game.quests.models import Quest
 
 logger = logging.getLogger("ai_dungeon_master.apps.game.turn_views")
 
@@ -25,6 +26,28 @@ def _filter_cards_by_inventory(cards: list, character: Character) -> list:
         character.inventory.values_list("name", flat=True).values_list("name", flat=True)
     )
     return [c for c in cards if not c.get("requires") or c["requires"] in inventory_names]
+
+
+def _process_quests(session: GameSession, parsed: dict) -> None:
+    quest_offer = parsed.get("quest_offer")
+    if quest_offer and isinstance(quest_offer, dict):
+        Quest.objects.create(
+            session=session,
+            title=quest_offer.get("title", "Untitled Quest"),
+            description=quest_offer.get("description", ""),
+            status=Quest.Status.OFFERED,
+        )
+
+    quest_complete = parsed.get("quest_complete")
+    if quest_complete:
+        try:
+            quest = Quest.objects.get(
+                id=int(quest_complete), session=session, status=Quest.Status.ACTIVE
+            )
+            quest.status = Quest.Status.COMPLETED
+            quest.save(update_fields=["status"])
+        except (Quest.DoesNotExist, ValueError):
+            pass
 
 
 def _apply_hp_change(session: GameSession, hp_change: int | None) -> dict:
@@ -126,6 +149,8 @@ class CardClickView(LoginRequiredMixin, View):
             session.pending_loot = loot
             session.save(update_fields=["pending_loot"])
 
+        _process_quests(session, parsed)
+
         if card_roll:
             dice_payload = {
                 "roll": card_roll,
@@ -203,6 +228,8 @@ class ResolveView(LoginRequiredMixin, View):
         if loot:
             session.pending_loot = loot
             session.save(update_fields=["pending_loot"])
+
+        _process_quests(session, parsed)
 
         session.turn_count += 1
         session.save(update_fields=["turn_count"])
