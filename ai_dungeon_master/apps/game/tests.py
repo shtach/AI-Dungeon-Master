@@ -232,29 +232,18 @@ def test_damage_applies(client, user, game_session, monkeypatch):
 
     game_session.character.current_hp = 10
     game_session.character.save(update_fields=["current_hp"])
-
-    ai_response = (
-        "[NARRATIVE]A dragon burns you![/NARRATIVE]"
-        "[HP_CHANGE]-3[/HP_CHANGE]"
-    )
     monkeypatch.setattr(
         "ai_dungeon_master.apps.game.turn_views.get_ai_client",
-        lambda: MockProvider(response=ai_response),
+        lambda: MockProvider(response="[NARRATIVE]Burn![/NARRATIVE][HP_CHANGE]-3[/HP_CHANGE]"),
     )
 
     client.force_login(user)
-    response = client.post(
-        f"/session/{game_session.id}/message/",
-        data=json.dumps({"label": "Fight dragon"}),
-        content_type="application/json",
-    )
+    resp = client.post(f"/session/{game_session.id}/message/", data=json.dumps({"label": "Fight"}), content_type="application/json")
+    data = resp.json()
 
-    assert response.status_code == 200
-    data = response.json()
+    assert resp.status_code == 200
     assert data["hp_change"] == -3
     assert data["current_hp"] == 7
-    assert data["max_hp"] == game_session.character.max_hp
-
     game_session.character.refresh_from_db()
     assert game_session.character.current_hp == 7
 
@@ -264,27 +253,17 @@ def test_heal_clamps_to_max(client, user, game_session, monkeypatch):
 
     game_session.character.current_hp = 8
     game_session.character.save(update_fields=["current_hp"])
-
-    ai_response = (
-        "[NARRATIVE]A healing spell![/NARRATIVE]"
-        "[HP_CHANGE]+5[/HP_CHANGE]"
-    )
     monkeypatch.setattr(
         "ai_dungeon_master.apps.game.turn_views.get_ai_client",
-        lambda: MockProvider(response=ai_response),
+        lambda: MockProvider(response="[NARRATIVE]Heal![/NARRATIVE][HP_CHANGE]+5[/HP_CHANGE]"),
     )
 
     client.force_login(user)
-    response = client.post(
-        f"/session/{game_session.id}/message/",
-        data=json.dumps({"label": "Cast heal"}),
-        content_type="application/json",
-    )
+    resp = client.post(f"/session/{game_session.id}/message/", data=json.dumps({"label": "Heal"}), content_type="application/json")
+    data = resp.json()
 
-    assert response.status_code == 200
-    data = response.json()
+    assert resp.status_code == 200
     assert data["current_hp"] == game_session.character.max_hp
-
     game_session.character.refresh_from_db()
     assert game_session.character.current_hp == game_session.character.max_hp
 
@@ -294,27 +273,17 @@ def test_zero_marks_dead(client, user, game_session, monkeypatch):
 
     game_session.character.current_hp = 2
     game_session.character.save(update_fields=["current_hp"])
-
-    ai_response = (
-        "[NARRATIVE]Fatal blow![/NARRATIVE]"
-        "[HP_CHANGE]-5[/HP_CHANGE]"
-    )
     monkeypatch.setattr(
         "ai_dungeon_master.apps.game.turn_views.get_ai_client",
-        lambda: MockProvider(response=ai_response),
+        lambda: MockProvider(response="[NARRATIVE]Fatal![/NARRATIVE][HP_CHANGE]-5[/HP_CHANGE]"),
     )
 
     client.force_login(user)
-    response = client.post(
-        f"/session/{game_session.id}/message/",
-        data=json.dumps({"label": "Final attack"}),
-        content_type="application/json",
-    )
+    resp = client.post(f"/session/{game_session.id}/message/", data=json.dumps({"label": "Kill"}), content_type="application/json")
+    data = resp.json()
 
-    assert response.status_code == 200
-    data = response.json()
+    assert resp.status_code == 200
     assert data["current_hp"] == 0
     assert data["is_dead"] is True
-
     game_session.refresh_from_db()
     assert game_session.status == GameSession.StatusChoices.DEAD

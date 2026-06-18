@@ -32,7 +32,6 @@ def _apply_hp_change(session: GameSession, hp_change: int | None) -> dict:
         return {}
 
     character = session.character
-    old_hp = character.current_hp
     character.current_hp = max(0, min(character.max_hp, character.current_hp + hp_change))
     character.save(update_fields=["current_hp"])
 
