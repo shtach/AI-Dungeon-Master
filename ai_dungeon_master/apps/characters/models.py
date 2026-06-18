@@ -94,9 +94,29 @@ class Character(models.Model):
 
 
 class InventoryItem(models.Model):
+    class SlotChoices(models.TextChoices):
+        WEAPON = "WEAPON", "Weapon"
+        ARMOR = "ARMOR", "Armor"
+        TRINKET = "TRINKET", "Trinket"
+        CONSUMABLE = "CONSUMABLE", "Consumable"
+        MISC = "MISC", "Misc"
+
+    class StatChoices(models.TextChoices):
+        STRENGTH = "strength", "Strength"
+        DEXTERITY = "dexterity", "Dexterity"
+        INTELLIGENCE = "intelligence", "Intelligence"
+        WISDOM = "wisdom", "Wisdom"
+
     character = models.ForeignKey(Character, on_delete=models.CASCADE, related_name="inventory")
     name = models.CharField(max_length=100)
     item_type = models.CharField(max_length=50)
+    slot = models.CharField(max_length=20, choices=SlotChoices.choices, default=SlotChoices.MISC)
+    equipped = models.BooleanField(default=False)
+    damage_die = models.CharField(max_length=20, null=True, blank=True)
+    attack_stat = models.CharField(max_length=20, choices=StatChoices.choices, null=True, blank=True)
+    hit_bonus = models.IntegerField(default=0)
+    ac_bonus = models.IntegerField(default=0)
+    stat_bonuses = models.JSONField(default=dict, blank=True)
     damage = models.CharField(max_length=20, null=True, blank=True)
     weight = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     price_gold = models.IntegerField(default=0)

@@ -151,6 +151,62 @@ class CharacterCreateStep4View(LoginRequiredMixin, View):
         )
         character.save()
 
+        from .models import InventoryItem
+
+        c_class = character.character_class
+        if c_class == "WARRIOR":
+            InventoryItem.objects.create(
+                character=character,
+                name="Longsword",
+                item_type="Weapon",
+                slot="WEAPON",
+                equipped=True,
+                damage_die="1d8",
+                attack_stat="strength",
+            )
+            InventoryItem.objects.create(
+                character=character, name="Chainmail", item_type="Armor", slot="ARMOR", equipped=True, ac_bonus=2
+            )
+        elif c_class == "WIZARD":
+            InventoryItem.objects.create(
+                character=character,
+                name="Wooden Staff",
+                item_type="Weapon",
+                slot="WEAPON",
+                equipped=True,
+                damage_die="1d6",
+                attack_stat="intelligence",
+            )
+            InventoryItem.objects.create(
+                character=character, name="Scholar's Robe", item_type="Armor", slot="ARMOR", equipped=True, ac_bonus=1
+            )
+        elif c_class == "ROGUE":
+            InventoryItem.objects.create(
+                character=character,
+                name="Steel Dagger",
+                item_type="Weapon",
+                slot="WEAPON",
+                equipped=True,
+                damage_die="1d4",
+                attack_stat="dexterity",
+            )
+            InventoryItem.objects.create(
+                character=character, name="Leather Armor", item_type="Armor", slot="ARMOR", equipped=True, ac_bonus=1
+            )
+        elif c_class == "CLERIC":
+            InventoryItem.objects.create(
+                character=character,
+                name="Holy Mace",
+                item_type="Weapon",
+                slot="WEAPON",
+                equipped=True,
+                damage_die="1d6",
+                attack_stat="strength",
+            )
+            InventoryItem.objects.create(
+                character=character, name="Scale Mail", item_type="Armor", slot="ARMOR", equipped=True, ac_bonus=2
+            )
+
         if WIZARD_SESSION_KEY in request.session:
             del request.session[WIZARD_SESSION_KEY]
 

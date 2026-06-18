@@ -1,7 +1,7 @@
 def get_equipped_items(character, provided_items=None):
     if provided_items is not None:
         return provided_items
-    return character.inventory.all()
+    return character.inventory.filter(equipped=True)
 
 
 def effective_stat(character, stat_name: str, equipped_items=None) -> int:

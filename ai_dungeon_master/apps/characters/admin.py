@@ -9,4 +9,5 @@ class CharacterAdmin(admin.ModelAdmin):
 
 @admin.register(InventoryItem)
 class InventoryItemAdmin(admin.ModelAdmin):
-    list_display = ("name", "character", "item_type", "damage", "price_gold")
+    list_display = ("name", "character", "slot", "equipped", "damage_die", "ac_bonus", "price_gold")
+    list_filter = ("slot", "equipped", "character__character_class")
