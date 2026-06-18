@@ -1,10 +1,9 @@
-import json
 import pytest
 from django.contrib.auth import get_user_model
 
 from ai_dungeon_master.apps.characters.models import Character, InventoryItem
 from ai_dungeon_master.apps.game.combat.engine import (
-    attack, enemy_turn, flee, outwit, persuade, roll_dice,
+    attack, enemy_turn, flee,
 )
 from ai_dungeon_master.apps.game.combat.models import Enemy
 from ai_dungeon_master.apps.game.models import GameSession
