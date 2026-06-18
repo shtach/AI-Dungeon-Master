@@ -40,13 +40,24 @@ docker compose up
 
 Docker will automatically:
 
-- build the Python image
+- build the Python image (the Tailwind standalone binary is downloaded **once**
+  during the image build and the CSS bundle is compiled into the image)
 - start PostgreSQL and wait until it is ready
-- run `migrate`
-- start Django at [http://localhost:8000](http://localhost:8000)
-- start the Tailwind CSS watcher
+- run `migrate` and `seed_data`
+- compile the CSS bundle **before** the server starts, so the first page load is
+  already styled
+- start Django at [http://localhost:8000](http://localhost:8000) and report
+  health via the `/healthz/` endpoint
+- start the Tailwind CSS watcher (rebuilds CSS on change during development)
 
-First build takes ~2 minutes. Subsequent starts are near-instant.
+First build takes ~2 minutes. Subsequent starts are near-instant — no Tailwind
+binary download happens on container start.
+
+> **How styling works in Docker:** the `web` service runs `tailwind build` before
+> `runserver`, so the page is styled on first load. The `tailwind` service only
+> *watches* for changes afterwards. The standalone binary is cached in the image
+> (pinned via `TAILWINDCSS_VERSION` in the `Dockerfile`), so container starts never
+> hit the network for it.
 
 ### 4. (Optional) Create a superuser
 
@@ -412,6 +423,24 @@ python manage.py collectstatic
 # Rebuild Tailwind CSS manually
 python manage.py tailwind build
 ```
+
+### Static files in production (prod-like)
+
+The dev server (`runserver`) serves static files automatically, so no
+`collectstatic` step is needed locally. For a **prod-like** deployment
+(`config.settings.production`, served by Gunicorn + WhiteNoise) the CSS bundle
+and other assets must be collected into `STATIC_ROOT`:
+
+```bash
+python manage.py tailwind build          # compile CSS (baked into the Docker image already)
+python manage.py collectstatic --no-input
+```
+
+`collectstatic` runs as a **build/deploy step**, not at container runtime. The
+Docker image already compiles the Tailwind bundle during the build, so a
+prod-like image only needs `collectstatic` (e.g. in the release/entrypoint
+phase) before Gunicorn starts. WhiteNoise then serves the hashed files via
+`CompressedManifestStaticFilesStorage`.
 
 ---
 
