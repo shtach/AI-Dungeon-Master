@@ -101,6 +101,10 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Resolve fixtures by name (e.g. `loaddata initial_data`) regardless of the
+# runtime BASE_DIR — test settings override BASE_DIR to the inner package dir.
+FIXTURE_DIRS = [BASE_DIR / "fixtures"]
+
 TAILWIND_APP_NAME = "theme"
 
 GEMINI_API_KEY = get_env("GEMINI_API_KEY", "")

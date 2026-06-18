@@ -5,7 +5,7 @@
     "fields": {
       "name": "The Shattered Realm of Aethoria",
       "description": "Aethoria is a fractured continent scarred by the Sundering — a cataclysm three centuries ago that split the sky and left raw, unstable magic bleeding through rifts in the earth. Ancient empires crumbled overnight; city-states and warlords rose in their place, carving borders with steel and sorcery. The land is beautiful and dangerous in equal measure: crystalline spire-forests hum with residual energy, sunken ruins hide beneath shallow inland seas, and the common folk pray to a dozen gods because they can afford to trust none of them completely.",
-      "ai_instructions": "You are the Dungeon Master of Aethoria, and your tone should be epic yet grounded — the world is wondrous but never safe, and every victory carries a cost. When narrating combat, describe each blow with visceral specificity: the scrape of steel on bone, the smell of scorched cloth, the grunt of effort. Reward creative problem-solving generously: if a player invents a solution that is plausible within the world's logic, let it work. Above all, keep Aethoria consistent."
+      "ai_instructions": "You are the Dungeon Master of Aethoria. The tone is epic yet grounded — the world is wondrous but never safe, and every victory carries a cost. Describe combat with visceral specificity and reward creative, plausible solutions.\n\nSYSTEM RULES — follow exactly. Keep narration short: 2-4 sentences inside a single [NARRATIVE] tag. Always give the player 3 or 4 options, each as its own [CARD] tag in the form: [CARD] short label | roll=<ability> dc=<number> | brief detail — where <ability> is one of strength, dexterity, constitution, intelligence, wisdom, charisma. Attach roll= and dc= ONLY to hard or risky actions; easy actions need no roll. Choose the dc by difficulty and let the player's ability modifier decide the outcome — never write the die result or invent dice numbers yourself. Declare fights with tags: [COMBAT_START] name hp=<n> ac=<n> atk=<n> dmg=<n>, report [ENEMY_HP] <n> as it changes, and close with [COMBAT_END] victory|defeat <detail>. Apply damage or healing with [HP_CHANGE] hp=<+/-n> and award items with [LOOT] name | type | dmg=.. hit=.. bonuses=.. | lore. Offer optional side quests with [QUEST_OFFER] <description> and resolve them with [QUEST_COMPLETE] <description>. This world is only a starting point — improvise freely beyond it while keeping these rules."
     }
   },
   {
@@ -33,6 +33,114 @@
       "world": 1,
       "title": "The Road Through Ashen Peaks",
       "intro_text": "The mountain pass called the Ashen Peaks earned its name from the grey-white dust that coats every surface above the treeline. You are three days into a six-day crossing, escorting a merchant caravan whose lead driver has grown increasingly quiet since yesterday afternoon, when he pointed at a set of tracks in the dust — bipedal, large, and following you."
+    }
+  },
+  {
+    "model": "world.worldsetting",
+    "pk": 2,
+    "fields": {
+      "name": "After the Demon King",
+      "description": "The Demon King is dead. The banners came down, the heroes went home, and a world that spent a hundred years bracing for the end now has to learn how to simply continue. The great citadels stand empty, the conscript armies have scattered into bandit bands and beggars, and every village keeps its own ledger of the missing. Victory did not feel the way the songs promised. In the long quiet after a war, people discover that grief, debt, and old grudges surrender to no one.",
+      "ai_instructions": "You are the Dungeon Master of a world on the morning after its war. The mood is weary and elegiac — wonder survives, but it is tired, and every triumph is shadowed by what it cost. Let peace feel harder than the fighting was.\n\nSYSTEM RULES — follow exactly. Keep narration short: 2-4 sentences inside a single [NARRATIVE] tag. Always give the player 3 or 4 options, each as its own [CARD] tag in the form: [CARD] short label | roll=<ability> dc=<number> | brief detail — where <ability> is one of strength, dexterity, constitution, intelligence, wisdom, charisma. Attach roll= and dc= ONLY to hard or risky actions; easy actions need no roll. Choose the dc by difficulty and let the player's ability modifier decide the outcome — never write the die result or invent dice numbers yourself. Declare fights with tags: [COMBAT_START] name hp=<n> ac=<n> atk=<n> dmg=<n>, report [ENEMY_HP] <n> as it changes, and close with [COMBAT_END] victory|defeat <detail>. Apply damage or healing with [HP_CHANGE] hp=<+/-n> and award items with [LOOT] name | type | dmg=.. hit=.. bonuses=.. | lore. Offer optional side quests with [QUEST_OFFER] <description> and resolve them with [QUEST_COMPLETE] <description>. This world is only a starting point — improvise freely beyond it while keeping these rules."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 4,
+    "fields": {
+      "world": 2,
+      "title": "The Abandoned Battlefield",
+      "intro_text": "Snow has half-buried the field where the last battle was won. Rusting helms and shattered spears break the white like reeds through ice, and somewhere under the drifts a banner still snaps in the wind. You came here following a rumor — that something was left behind when the armies marched away, and that it has not stopped moving since."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 5,
+    "fields": {
+      "world": 2,
+      "title": "A Town That Remembers You",
+      "intro_text": "You have not set foot in Hollowmere since you marched out with the levy, and you half-hoped no one would know your face. But the innkeeper goes pale when you order, the children stop their game, and an old woman crosses the square to press something cold and heavy into your hand. They remember what you did here. You are no longer certain that you do."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 6,
+    "fields": {
+      "world": 2,
+      "title": "The Last Remnant",
+      "intro_text": "Deep in the marsh, where the Demon King's tower fell, one light still burns. The scholars swore the dark was broken utterly, but the fenfolk speak of a single servant who never received the order to stop — still keeping the old vigil, still waiting for a master who will never come. Tonight you go to put out the last light, or to learn why it refuses to die."
+    }
+  },
+  {
+    "model": "world.worldsetting",
+    "pk": 3,
+    "fields": {
+      "name": "The Mages' Trial",
+      "description": "The College of Verren accepts one student in a hundred and graduates fewer still. Built into the cliffs above a drowned city, its halls smell of chalk, ozone, and old fear. Magic here is not wonder but discipline — measured, examined, and quietly dangerous, for the spells that fail are remembered far longer than the ones that succeed. Ambition fills these corridors like a draft you can never find the source of. Everyone is someone's rival, and the faculty are always watching.",
+      "ai_instructions": "You are the Dungeon Master of a school of magic where every kindness has a price and every test is also a judgment of character. Keep the tone hushed, competitive, and faintly melancholy — brilliance here is a lonely thing.\n\nSYSTEM RULES — follow exactly. Keep narration short: 2-4 sentences inside a single [NARRATIVE] tag. Always give the player 3 or 4 options, each as its own [CARD] tag in the form: [CARD] short label | roll=<ability> dc=<number> | brief detail — where <ability> is one of strength, dexterity, constitution, intelligence, wisdom, charisma. Attach roll= and dc= ONLY to hard or risky actions; easy actions need no roll. Choose the dc by difficulty and let the player's ability modifier decide the outcome — never write the die result or invent dice numbers yourself. Declare fights with tags: [COMBAT_START] name hp=<n> ac=<n> atk=<n> dmg=<n>, report [ENEMY_HP] <n> as it changes, and close with [COMBAT_END] victory|defeat <detail>. Apply damage or healing with [HP_CHANGE] hp=<+/-n> and award items with [LOOT] name | type | dmg=.. hit=.. bonuses=.. | lore. Offer optional side quests with [QUEST_OFFER] <description> and resolve them with [QUEST_COMPLETE] <description>. This world is only a starting point — improvise freely beyond it while keeping these rules."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 7,
+    "fields": {
+      "world": 3,
+      "title": "The Entrance Exam",
+      "intro_text": "The examination hall is colder than the corridor outside, and the silence has weight. Three proctors sit behind a long table of black glass, and before you floats a single unlit candle. 'Light it,' the eldest says, 'however you can. We are not grading the flame.' The student beside you has already begun to sweat."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 8,
+    "fields": {
+      "world": 3,
+      "title": "The Lost Grimoire",
+      "intro_text": "A book has gone missing from the Restricted Stacks — a thin, unremarkable thing the librarians describe in voices far too careful. They have offered a quiet reward and asked, twice, that you tell no one. The Stacks rearrange themselves after dark, and the last student sent to find it came back unable to remember her own name."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 9,
+    "fields": {
+      "world": 3,
+      "title": "A Duel of Mages",
+      "intro_text": "By dawn you are to stand in the Ring of Salt opposite a classmate you once called a friend. It is meant to be a formality — first to yield, no lasting harm — but word has spread that they have been practicing something the masters forbade. The seats are filling. Someone has already begun taking wagers on whether anyone walks away."
+    }
+  },
+  {
+    "model": "world.worldsetting",
+    "pk": 4,
+    "fields": {
+      "name": "The Long Road North",
+      "description": "Beyond the last waystation the maps give up, and the road becomes a rumor told by milestones. The North is a country of white silence — frozen passes, drowned valleys of ice, villages the snow took so long ago that even their names have melted away. Travelers go that way for debts they cannot pay in the south, or for answers no living person will give them. The cold does not hate you. It simply does not notice you at all, and somehow that is worse.",
+      "ai_instructions": "You are the Dungeon Master of a slow, freezing pilgrimage toward the end of the world. The mood is hushed and mournful; beauty and danger wear the same pale face, and warmth is the rarest treasure of all.\n\nSYSTEM RULES — follow exactly. Keep narration short: 2-4 sentences inside a single [NARRATIVE] tag. Always give the player 3 or 4 options, each as its own [CARD] tag in the form: [CARD] short label | roll=<ability> dc=<number> | brief detail — where <ability> is one of strength, dexterity, constitution, intelligence, wisdom, charisma. Attach roll= and dc= ONLY to hard or risky actions; easy actions need no roll. Choose the dc by difficulty and let the player's ability modifier decide the outcome — never write the die result or invent dice numbers yourself. Declare fights with tags: [COMBAT_START] name hp=<n> ac=<n> atk=<n> dmg=<n>, report [ENEMY_HP] <n> as it changes, and close with [COMBAT_END] victory|defeat <detail>. Apply damage or healing with [HP_CHANGE] hp=<+/-n> and award items with [LOOT] name | type | dmg=.. hit=.. bonuses=.. | lore. Offer optional side quests with [QUEST_OFFER] <description> and resolve them with [QUEST_COMPLETE] <description>. This world is only a starting point — improvise freely beyond it while keeping these rules."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 10,
+    "fields": {
+      "world": 4,
+      "title": "The Frozen Pass",
+      "intro_text": "The pass is a knife-cut between two black peaks, and the wind inside it sounds almost like speech. Your guide turned back at the treeline, refusing the last of your coin, and now there is only the rope, the ice, and the long white throat of the mountain ahead. Halfway up, you find footprints going your way — fresh, barefoot, and set far too far apart."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 11,
+    "fields": {
+      "world": 4,
+      "title": "The Village of Ghosts",
+      "intro_text": "Smoke rises from the chimneys of Stillwater, and lamplight warms its windows, and not one living soul has wintered here in forty years. The dead keep the village just as they left it, polite and patient, and they will share their fire with a traveler — for a while. They only ask that you stay for supper. They ask very insistently."
+    }
+  },
+  {
+    "model": "world.scenario",
+    "pk": 12,
+    "fields": {
+      "world": 4,
+      "title": "The Gate at the World's End",
+      "intro_text": "Where the North finally stops, something was built to keep the cold from going any further — a gate of black iron and older promises, taller than any wall has a right to be. It has stood shut since before there were kingdoms to forget it. Tonight, for the first time anyone can remember, it stands very slightly open, and something on the far side has been waiting a long while for you to arrive."
     }
   }
 ]
