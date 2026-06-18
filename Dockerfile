@@ -8,6 +8,11 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+# Pin the Tailwind standalone binary version. Used both at image build time
+# (to cache the binary into the image) and at runtime, so the cached binary
+# path matches and `tailwind` never re-downloads on container start.
+ENV TAILWINDCSS_VERSION=v4.1.16
+
 # Working directory inside the container
 # All subsequent commands run from /app
 WORKDIR /app
@@ -32,6 +37,12 @@ COPY . .
 
 # Create static directory to suppress staticfiles.W004 warning
 RUN mkdir -p static
+
+# Download & cache the Tailwind standalone binary into the image, then build the
+# CSS bundle once. Caching the binary here makes `tailwind start`/`build` a no-op
+# download on container start, and the baked stylesheet gives prod-like images
+# (collectstatic + whitenoise) a ready bundle without a build step at runtime.
+RUN python manage.py tailwind build
 
 # Expose Django's default port
 # Note: EXPOSE is documentation only, doesn't actually publish the port
