@@ -68,8 +68,11 @@ def _apply_hp_change(session: GameSession, hp_change: int | None) -> dict:
         GameSession.objects.filter(id=session.id).update(damage_taken=F("damage_taken") + abs(hp_change))
 
     if character.current_hp == 0 and session.status == GameSession.StatusChoices.ACTIVE:
-        session.status = GameSession.StatusChoices.DEAD
-        session.save(update_fields=["status"])
+        from ai_dungeon_master.apps.legacy.models import SessionSummary
+        from ai_dungeon_master.apps.legacy.services import end_session
+
+        if not hasattr(session, "legacy_summary"):
+            end_session(session, SessionSummary.VerdictChoices.DIED)
 
     return {
         "hp_change": hp_change,
