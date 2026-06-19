@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Codex — {{ session.character.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .cxpage{min-height:100vh;display:flex;flex-direction:column;}
+  .cxhead{display:flex;align-items:center;gap:14px;padding:16px 30px;border-bottom:1px solid var(--line);}
+  .cxhead a{display:flex;align-items:center;gap:7px;color:var(--text-3);font-size:13px;} .cxhead a:hover{color:var(--text);}
+  .cxhead a svg{width:15px;height:15px;}
+  .cxhead h1{font-family:'Newsreader',serif;font-size:19px;font-weight:500;}
+  .cxbody{flex:1;display:grid;grid-template-columns:230px 1fr;min-height:0;}
+  .cxnav{border-right:1px solid var(--line);padding:18px 12px;overflow-y:auto;}
+  .cxnav .cat{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3);margin:14px 8px 6px;}
+  .cxnav .cat:first-child{margin-top:0;}
+  .cxitem{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:13.5px;color:var(--text-2);cursor:pointer;transition:all .14s;}
+  .cxitem:hover{background:var(--surface-2);color:var(--text);} .cxitem.active{background:var(--ember-soft);color:var(--ember-2);}
+  .cxitem svg{width:16px;height:16px;}
+  .lock{opacity:.5;}
+  .cxmain{padding:30px 34px;overflow-y:auto;}
+  .cxmain h2{font-family:'Newsreader',serif;font-size:30px;font-weight:500;margin-bottom:4px;}
+  .cxmain .sub{font-size:13px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:22px;}
+  .cxmain p{font-family:'Newsreader',serif;font-size:17px;line-height:1.65;color:var(--text-2);margin-bottom:16px;max-width:600px;}
+  .cxmain p .first{font-family:'Newsreader',serif;float:left;font-size:52px;line-height:.8;color:var(--ember-2);margin:5px 11px 0 0;font-weight:500;}
+  .meta-pills{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
+  .mpill{font-size:12px;color:var(--text-2);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 13px;display:flex;align-items:center;gap:7px;}
+  .mpill svg{width:14px;height:14px;color:var(--ember-2);}
+  .cx-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-3);text-align:center;padding:40px;}
+  .cx-empty svg{width:40px;height:40px;margin-bottom:12px;color:var(--text-3);}
+  @media (max-width:760px){.cxbody{grid-template-columns:1fr;}.cxnav{display:none;}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cxpage">
+  <div class="cxhead">
+    <a href="{% url 'game:session' session.id %}"><svg data-lucide="arrow-left"></svg> Back to story</a>
+    <h1 class="serif">Codex</h1>
+  </div>
+  <div class="cxbody">
+    <div class="cxnav" id="cxnav">
+      <div class="cat">Characters</div>
+      <div class="cxitem active" onclick="showEntry(this,'tomb-wraith')"><svg data-lucide="ghost"></svg> Tomb Wraith</div>
+      <div class="cxitem" onclick="showEntry(this,'village-elder')"><svg data-lucide="user-round"></svg> The Village Elder</div>
+      <div class="cxitem lock"><svg data-lucide="lock"></svg> ???</div>
+      <div class="cat">Places</div>
+      <div class="cxitem" onclick="showEntry(this,'tomb-of-silent-kings')"><svg data-lucide="castle"></svg> The Tomb of Silent Kings</div>
+      <div class="cxitem" onclick="showEntry(this,'stonehollow')"><svg data-lucide="house"></svg> Stonehollow</div>
+      <div class="cat">Lore</div>
+      <div class="cxitem" onclick="showEntry(this,'war-demon-king')"><svg data-lucide="swords"></svg> The War with the Demon King</div>
+      <div class="cxitem lock"><svg data-lucide="lock"></svg> ???</div>
+    </div>
+
+    <div class="cxmain" id="cxmain">
+      <div class="cx-empty" id="cx-empty">
+        <svg data-lucide="book-open"></svg>
+        Select an entry from the codex to read about it.
+      </div>
+
+      <div id="entry-tomb-wraith" style="display:none;">
+        <h2>Tomb Wraith</h2>
+        <div class="sub">Creature · Undead</div>
+        <div class="meta-pills">
+          <span class="mpill"><svg data-lucide="shield"></svg> AC 13</span>
+          <span class="mpill"><svg data-lucide="heart"></svg> 18 HP</span>
+          <span class="mpill"><svg data-lucide="swords"></svg> ATK +4 · 1d8</span>
+          <span class="mpill"><svg data-lucide="map-pin"></svg> The lower crypt</span>
+        </div>
+        <p><span class="first">A</span> chill that walks. Tomb wraiths are the lingering grief of those buried without rites — bound to the stone that holds their bones, hungry for the warmth of the living.</p>
+        <p>They are slow to anger but relentless once roused, and their touch leaches the heat from flesh and courage alike. Fire and consecrated steel are said to be the only things they truly fear.</p>
+      </div>
+
+      <div id="entry-village-elder" style="display:none;">
+        <h2>The Village Elder</h2>
+        <div class="sub">Character · NPC</div>
+        <div class="meta-pills">
+          <span class="mpill"><svg data-lucide="map-pin"></svg> Stonehollow</span>
+          <span class="mpill"><svg data-lucide="scroll-text"></svg> Quest giver</span>
+        </div>
+        <p><span class="first">T</span>he elder of Stonehollow has watched over the village for longer than anyone can remember. His voice is steady, but his eyes carry the weight of the missing — those who walked into the dark and never returned.</p>
+      </div>
+
+      <div id="entry-tomb-of-silent-kings" style="display:none;">
+        <h2>The Tomb of Silent Kings</h2>
+        <div class="sub">Place · Dungeon</div>
+        <div class="meta-pills">
+          <span class="mpill"><svg data-lucide="map-pin"></svg> Stonehollow outskirts</span>
+          <span class="mpill"><svg data-lucide="skull"></svg> Dangerous</span>
+        </div>
+        <p><span class="first">B</span>eneath the hills outside Stonehollow lies a network of catacombs once used to inter the kings of a forgotten dynasty. The entrance collapsed generations ago, but the silence inside has never been broken — until now.</p>
+      </div>
+
+      <div id="entry-stonehollow" style="display:none;">
+        <h2>Stonehollow</h2>
+        <div class="sub">Place · Village</div>
+        <div class="meta-pills">
+          <span class="mpill"><svg data-lucide="map-pin"></svg> The Heartlands</span>
+        </div>
+        <p><span class="first">A</span> quiet village built around an ancient crossroads. The folk here are hardy, practical, and slow to trust outsiders. Something has been wrong lately — the grief that settled after the last war has curdled into something stranger.</p>
+      </div>
+
+      <div id="entry-war-demon-king" style="display:none;">
+        <h2>The War with the Demon King</h2>
+        <div class="sub">Lore · History</div>
+        <div class="meta-pills">
+          <span class="mpill"><svg data-lucide="swords"></svg> Major conflict</span>
+          <span class="mpill"><svg data-lucide="clock"></svg> 12 years ago</span>
+        </div>
+        <p><span class="first">T</span>he great war ended when the coalition of mortal kingdoms stormed the Demon King's citadel and sealed the rift he had torn between worlds. The victory was real, but it cost a generation. Every village in the Heartlands lost someone.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showEntry(el, key) {
+  document.querySelectorAll('.cxitem').forEach(x => x.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('cx-empty').style.display = 'none';
+  document.querySelectorAll('.cxmain > div[id^="entry-"]').forEach(d => d.style.display = 'none');
+  var target = document.getElementById('entry-' + key);
+  if (target) target.style.display = '';
+}
+</script>
+{% endblock %}

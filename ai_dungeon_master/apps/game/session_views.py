@@ -69,6 +69,12 @@ class QuestLogView(LoginRequiredMixin, View):
         })
 
 
+class CodexView(LoginRequiredMixin, View):
+    def get(self, request, session_id):
+        session = get_object_or_404(GameSession, id=session_id, user=request.user)
+        return render(request, "game/codex.html", {"session": session})
+
+
 class CreateSessionView(LoginRequiredMixin, View):
 
     def get(self, request):
