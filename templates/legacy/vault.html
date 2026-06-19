@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Legacy Vault — AI Dungeon Master{% endblock %}
+
+{% block extra_head %}
+<style>
+  .vpage{min-height:100vh;display:flex;flex-direction:column;}
+  .vhead{display:flex;align-items:center;gap:14px;padding:16px 30px;border-bottom:1px solid var(--line);}
+  .vhead a{display:flex;align-items:center;gap:7px;color:var(--text-3);font-size:13px;} .vhead a:hover{color:var(--text);}
+  .vhead a svg{width:15px;height:15px;}
+  .vhead h1{font-family:'Newsreader',serif;font-size:19px;font-weight:500;}
+  .vbody{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;width:100%;margin:0 auto;padding:38px 28px 60px;}
+  .vpanel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;}
+  .vpanel h2{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .vpanel h2 svg{width:14px;height:14px;color:var(--ember-2);}
+  .points-bar{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 22px;margin-bottom:24px;}
+  .points-bar .pts{font-size:28px;font-weight:600;color:var(--ember-2);font-variant-numeric:tabular-nums;}
+  .points-bar .lbl{font-size:12px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;}
+  .relic-card{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+  .relic-card .rc-icon{width:38px;height:38px;border-radius:10px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;flex:none;}
+  .relic-card .rc-icon svg{width:18px;height:18px;}
+  .relic-card .rc-name{font-weight:500;font-size:14px;}
+  .relic-card .rc-meta{font-size:12px;color:var(--text-3);margin-top:2px;}
+  .relic-card.empty{border-style:dashed;justify-content:center;color:var(--text-3);font-size:13px;min-height:66px;}
+  .perk-row{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .perk-row .pr-info{flex:1;}
+  .perk-row .pr-name{font-weight:500;font-size:14px;}
+  .perk-row .pr-desc{font-size:12.5px;color:var(--text-3);margin-top:2px;}
+  .perk-row .pr-cost{font-size:12px;color:var(--gold);white-space:nowrap;}
+  .perk-row.owned{border-color:var(--teal);border-left:3px solid var(--teal);}
+  .perk-row.owned .pr-name{color:var(--teal);}
+  .perk-row .owned-tag{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--teal);background:rgba(91,155,143,.12);padding:3px 8px;border-radius:99px;}
+  @media (max-width:760px){.vbody{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vpage">
+  <div class="vhead">
+    <a href="{% url 'game:dashboard' %}"><svg data-lucide="arrow-left"></svg> Back</a>
+    <h1 class="serif">Legacy Vault</h1>
+  </div>
+
+  <div style="max-width:900px;width:100%;margin:0 auto;padding:24px 28px 0;">
+    <div class="points-bar">
+      <div>
+        <div class="lbl">Legacy points</div>
+        <div class="pts">{{ profile.legacy_points }}</div>
+      </div>
+      <svg data-lucide="flame" style="width:28px;height:28px;color:var(--ember);"></svg>
+    </div>
+  </div>
+
+  <div class="vbody">
+    {# Relic hoard (left) #}
+    <div class="vpanel">
+      <h2><svg data-lucide="gem"></svg> Relic Hoard</h2>
+      {% for relic in relics %}
+      <div class="relic-card">
+        <div class="rc-icon">
+          <svg data-lucide="gem" style="color:var(--r-legendary);"></svg>
+        </div>
+        <div>
+          <div class="rc-name">{{ relic.name }}</div>
+          <div class="rc-meta">{{ relic.get_slot_display }}{% if relic.damage_die %} · {{ relic.damage_die }}{% endif %}{% if relic.ac_bonus %} · +{{ relic.ac_bonus }} AC{% endif %}</div>
+        </div>
+      </div>
+      {% endfor %}
+
+      {% if relics|length < 5 %}
+      {% for _ in ""|make_list %}
+      {% if forloop.counter > relics|length and forloop.counter <= 5 %}
+      <div class="relic-card empty">
+        <svg data-lucide="lock" style="width:16px;height:16px;"></svg> Locked slot
+      </div>
+      {% endif %}
+      {% endfor %}
+      {% endif %}
+
+      {% if not relics %}
+      <div style="font-size:13.5px;color:var(--text-3);text-align:center;padding:20px 0;">No relics yet. Complete adventures to earn powerful artefacts.</div>
+      {% endif %}
+    </div>
+
+    {# Legacy perks (right) #}
+    <div class="vpanel">
+      <h2><svg data-lucide="sparkles"></svg> Legacy Perks</h2>
+
+      {% for perk in owned_perks %}
+      <div class="perk-row owned">
+        <div class="pr-info">
+          <div class="pr-name">{{ perk.name }}</div>
+          <div class="pr-desc">{{ perk.description }}</div>
+        </div>
+        <span class="owned-tag">Owned</span>
+      </div>
+      {% endfor %}
+
+      {% for perk in buyable_perks %}
+      <div class="perk-row">
+        <div class="pr-info">
+          <div class="pr-name">{{ perk.name }}</div>
+          <div class="pr-desc">{{ perk.description }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="pr-cost">{{ perk.cost }} pts</span>
+          {% if profile.legacy_points >= perk.cost %}
+          <button class="btn btn-primary" style="padding:6px 14px;font-size:12px;" onclick="buyPerk('{{ perk.key }}',this)">Buy</button>
+          {% else %}
+          <button class="btn btn-ghost" style="padding:6px 14px;font-size:12px;" disabled>Buy</button>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+
+      {% if not owned_perks and not buyable_perks %}
+      <div style="font-size:13.5px;color:var(--text-3);text-align:center;padding:20px 0;">No perks available yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function buyPerk(key, btn) {
+  fetch('/legacy/perk/' + key + '/buy/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) location.reload();
+    else alert(d.error || 'Purchase failed');
+  });
+}
+</script>
+{% endblock %}
