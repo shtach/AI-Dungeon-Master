@@ -1,33 +1,106 @@
 {% extends "base.html" %}
 
-{% block title %}Register — AI Dungeon Master{% endblock %}
+{% block title %}Create account — AI Dungeon Master{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center">
-    <div class="w-full max-w-sm bg-dm-surface border border-dm-muted/20 rounded-xl p-8">
-        <h1 class="text-2xl font-bold text-dm-accent mb-6 text-center">Register</h1>
-        <form method="post" class="flex flex-col gap-4">
-            {% csrf_token %}
-            {% for field in form %}
-            <div class="flex flex-col gap-1">
-                <label class="text-xs text-dm-muted uppercase tracking-wide">
-                    {{ field.label }}
-                </label>
-                {{ field }}
-                {% if field.errors %}
-                <p class="text-xs text-red-400">{{ field.errors.0 }}</p>
-                {% endif %}
-            </div>
-            {% endfor %}
-            <button type="submit"
-                    class="mt-2 bg-dm-accent text-dm-bg font-semibold py-2 rounded-lg hover:opacity-90 transition-opacity">
-                Create account
-            </button>
-        </form>
-        <p class="text-center text-sm text-dm-muted mt-4">
-            Already have an account?
-            <a href="{% url 'accounts:login' %}" class="text-dm-accent hover:underline">Login</a>
-        </p>
+<div class="auth" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;">
+  <div class="page-wash"></div>
+  <div class="embers" id="embers"></div>
+
+  <div class="card reveal" style="width:min(400px,100%);position:relative;z-index:2;background:none;border:none;">
+    {% include "partials/_brand.html" with brand_icon="wand-sparkles" %}
+    <p style="text-align:center;font-size:14px;color:var(--text-3);margin:10px 0 26px;">Create an account to start playing</p>
+
+    <div class="glass" style="padding:30px 28px;">
+      {% if form.non_field_errors %}
+      <div class="err show" style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--wound);background:rgba(192,106,58,.1);border:1px solid rgba(192,106,58,.3);border-radius:10px;padding:10px 12px;margin-bottom:16px;">
+        <svg data-lucide="circle-alert" style="width:15px;height:15px;flex:none;"></svg>
+        <span>{{ form.non_field_errors.0 }}</span>
+      </div>
+      {% endif %}
+
+      <form method="post" id="regform">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.name == "password1" %}
+          <div class="meter" style="display:flex;gap:4px;margin-top:8px;">
+            <i id="m1"></i><i id="m2"></i><i id="m3"></i><i id="m4"></i>
+          </div>
+          {% endif %}
+          {% if field.name == "password2" %}
+          <div class="hint" id="match" style="display:none;font-size:12px;margin-top:6px;align-items:center;gap:6px;color:var(--text-3);">
+            <svg data-lucide="check" style="width:13px;height:13px;"></svg><span>Passwords match</span>
+          </div>
+          {% endif %}
+          {% if field.errors %}
+          <p style="font-size:12px;color:var(--wound);margin-top:4px;">{{ field.errors.0 }}</p>
+          {% endif %}
+          {% if field.help_text %}
+          <p style="font-size:11.5px;color:var(--text-3);margin-top:4px;line-height:1.4;">{{ field.help_text|safe }}</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:6px;">
+          Create account <svg data-lucide="arrow-right" class="sm"></svg>
+        </button>
+      </form>
+
+      <div style="text-align:center;font-size:13.5px;color:var(--text-3);margin-top:20px;">
+        Already have an account? <a href="{% url 'accounts:login' %}" style="color:var(--ember-2);">Sign in</a>
+      </div>
     </div>
+  </div>
 </div>
+
+<style>
+  .meter i{height:3px;flex:1;border-radius:99px;background:var(--line);transition:background .3s;}
+  .meter i.on{background:var(--ember);} .meter i.strong{background:var(--good);}
+  .hint.ok{color:var(--good-2);}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function(){
+    const e=document.getElementById('embers');
+    if(e && !window.matchMedia('(prefers-reduced-motion:reduce)').matches){
+      for(let i=0;i<22;i++){
+        const s=document.createElement('span');s.className='ember';
+        s.style.left=Math.random()*100+'%';
+        s.style.animationDuration=(8+Math.random()*9)+'s';
+        s.style.animationDelay=(-Math.random()*14)+'s';
+        s.style.opacity=Math.random()*.5+.2;
+        s.style.transform=`scale(${Math.random()*1.6+.6})`;
+        e.appendChild(s);
+      }
+    }
+
+    // Password strength + match — bound by field name, not Django ids.
+    const form=document.getElementById('regform');
+    if(!form)return;
+    const p1=form.querySelector('[name="password1"]');
+    const p2=form.querySelector('[name="password2"]');
+    const match=document.getElementById('match');
+    function chk(){
+      if(p1){
+        const p=p1.value;let sc=0;
+        if(p.length>=6)sc++;if(p.length>=10)sc++;if(/[0-9]/.test(p))sc++;if(/[^a-zA-Z0-9]/.test(p))sc++;
+        ['m1','m2','m3','m4'].forEach((id,i)=>{const el=document.getElementById(id);if(!el)return;el.className='';if(i<sc)el.classList.add(sc>=4?'strong':'on');});
+      }
+      if(p1&&p2&&match){
+        if(p2.value.length>0){
+          match.style.display='flex';
+          const ok=p1.value===p2.value&&p1.value.length>0;
+          match.classList.toggle('ok',ok);
+          match.querySelector('span').textContent=ok?'Passwords match':'Passwords don\u2019t match yet';
+        }else{match.style.display='none';}
+      }
+    }
+    if(p1)p1.addEventListener('input',chk);
+    if(p2)p2.addEventListener('input',chk);
+  })();
+</script>
 {% endblock %}
