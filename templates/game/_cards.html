@@ -1,0 +1,143 @@
+{% comment %}
+  Action-card fragment (DEV-55). Renders the turn's 3–4 choices as the
+  landing's .ga-ch cards. Consumes the parser dict shape (DEV-36):
+    cards = [{label, roll, dc, requires, detail}]
+
+  The real game loop (DEV-42 / CardClickView) speaks JSON, not HTML:
+  clicking a card POSTs {label, roll, dc} as a JSON body to
+  game:card_click and gets back {narrative, cards, current_hp, dice, …}.
+  So the click handler is fetch-based and re-renders this grid client-side
+  from the returned `cards`, rather than an hx-swap of server HTML.
+{% endcomment %}
+
+<div id="cards-grid"
+     class="ga-choices"
+     data-post-url="{% url 'game:card_click' session.id %}"
+     data-csrf="{{ csrf_token }}">
+
+  {% if cards %}
+    {% for card in cards %}
+    <button type="button" class="ga-ch"
+            data-label="{{ card.label }}"
+            {% if card.roll %}data-roll="{{ card.roll }}"{% endif %}
+            {% if card.dc %}data-dc="{{ card.dc }}"{% endif %}>
+      <span class="ga-ic"><svg data-lucide="{{ card.roll|default:'arrow-right'|yesno:'dice-6,arrow-right' }}"></svg></span>
+      <span class="ga-body">
+        <span class="ga-label">{{ card.label }}</span>
+        {% if card.detail %}<span class="ga-detail">{{ card.detail }}</span>{% endif %}
+      </span>
+      {% if card.roll %}
+      <span class="rl tag tag-roll">{{ card.roll|upper }}{% if card.dc %} · DC {{ card.dc }}{% endif %}</span>
+      {% else %}
+      <span class="rl tag tag-free">no roll</span>
+      {% endif %}
+    </button>
+    {% endfor %}
+  {% else %}
+    <div class="cards-empty" style="grid-column:1/-1;">
+      <svg data-lucide="mouse-pointer-click"></svg>
+      <p>The Dungeon Master is preparing your choices…</p>
+    </div>
+  {% endif %}
+
+</div>
+
+<style>
+  .ga-choices{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+  .ga-choices.is-busy{opacity:.5;pointer-events:none;}
+  .ga-ch{display:flex;align-items:center;gap:13px;padding:15px 16px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);cursor:pointer;transition:border-color .15s,background .15s,transform .12s;
+    text-align:left;width:100%;font:inherit;color:inherit;}
+  .ga-ch:hover{border-color:var(--ember);background:var(--ember-soft);transform:translateY(-2px);}
+  .ga-ch:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+  .ga-ch .ga-ic{width:40px;height:40px;border-radius:11px;background:var(--surface-2);display:flex;align-items:center;
+    justify-content:center;color:var(--ember-2);flex:none;}
+  .ga-ch .ga-ic svg{width:19px;height:19px;}
+  .ga-ch .ga-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .ga-ch .ga-label{font-size:14.5px;font-weight:500;line-height:1.3;}
+  .ga-ch .ga-detail{font-size:12px;color:var(--text-3);line-height:1.4;}
+  .ga-ch .rl{flex:none;align-self:flex-start;}
+  .cards-empty{display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--text-3);text-align:center;padding:40px 20px;font-size:14px;}
+  .cards-empty svg{width:26px;height:26px;color:var(--text-3);}
+  @media (max-width:760px){.ga-choices{grid-template-columns:1fr;}}
+</style>
+
+<script>
+(function(){
+  const grid = document.getElementById('cards-grid');
+  if(!grid || grid.dataset.bound) return;
+  grid.dataset.bound = '1';
+
+  const ICONS = {  // intent → lucide, by roll stat or keyword
+    str:'swords', strength:'swords', dex:'wind', dexterity:'wind',
+    con:'shield', constitution:'shield', int:'wand-sparkles', intelligence:'wand-sparkles',
+    wis:'eye', wisdom:'eye', cha:'message-circle', charisma:'message-circle'
+  };
+  function iconFor(card){
+    if(card.roll && ICONS[card.roll.toLowerCase()]) return ICONS[card.roll.toLowerCase()];
+    return card.roll ? 'dice-6' : 'arrow-right';
+  }
+
+  function renderCards(cards){
+    if(!cards || !cards.length){
+      grid.innerHTML = '<div class="cards-empty" style="grid-column:1/-1;"><svg data-lucide="mouse-pointer-click"></svg><p>The Dungeon Master is preparing your choices…</p></div>';
+      if(window.lucide) lucide.createIcons();
+      return;
+    }
+    grid.innerHTML = cards.map(function(c){
+      const badge = c.roll
+        ? '<span class="rl tag tag-roll">'+escapeHtml(c.roll.toUpperCase())+(c.dc?' · DC '+c.dc:'')+'</span>'
+        : '<span class="rl tag tag-free">no roll</span>';
+      const detail = c.detail ? '<span class="ga-detail">'+escapeHtml(c.detail)+'</span>' : '';
+      return '<button type="button" class="ga-ch" data-label="'+escapeHtml(c.label)+'"'
+        + (c.roll?' data-roll="'+escapeHtml(c.roll)+'"':'')
+        + (c.dc?' data-dc="'+c.dc+'"':'') + '>'
+        + '<span class="ga-ic"><svg data-lucide="'+iconFor(c)+'"></svg></span>'
+        + '<span class="ga-body"><span class="ga-label">'+escapeHtml(c.label)+'</span>'+detail+'</span>'
+        + badge + '</button>';
+    }).join('');
+    if(window.lucide) lucide.createIcons();
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(m){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+    });
+  }
+
+  grid.addEventListener('click', function(e){
+    const btn = e.target.closest('.ga-ch');
+    if(!btn || grid.classList.contains('is-busy')) return;
+
+    const payload = { label: btn.dataset.label };
+    if(btn.dataset.roll) payload.roll = btn.dataset.roll;
+    if(btn.dataset.dc) payload.dc = parseInt(btn.dataset.dc, 10);
+
+    grid.classList.add('is-busy');  // disable grid while in flight
+
+    fetch(grid.dataset.postUrl, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'X-CSRFToken': grid.dataset.csrf },
+      body: JSON.stringify(payload)
+    })
+    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, data:d}; }); })
+    .then(function(res){
+      const d = res.data || {};
+      // narration → fire an event the scene/story slot can listen for
+      document.dispatchEvent(new CustomEvent('dm:turn', { detail: d }));
+      // hp → let the sheet update its #hp-bar
+      if(d.current_hp !== undefined){
+        document.dispatchEvent(new CustomEvent('dm:hp', { detail: d }));
+      }
+      // re-render the choices for the next turn
+      renderCards(d.cards || []);
+    })
+    .catch(function(){
+      document.dispatchEvent(new CustomEvent('dm:error', { detail:{ message:'Something went wrong. Try again.' } }));
+    })
+    .finally(function(){
+      grid.classList.remove('is-busy');
+    });
+  });
+})();
+</script>

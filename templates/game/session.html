@@ -2,130 +2,141 @@
 
 {% block title %}{{ session.character.name }} — AI Dungeon Master{% endblock %}
 
+{% block extra_head %}
+<style>
+  .sess-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .glass-shell{width:min(1120px,100%);height:min(760px,92vh);}
+  .shell{height:100%;border-radius:18px;overflow:hidden;border:1px solid var(--line-2);
+    background:linear-gradient(165deg,var(--surface),var(--bg-2));box-shadow:0 40px 90px -40px rgba(0,0,0,.8);}
+
+  /* sidebar specifics layered on the shared .side */
+  .side{gap:16px;}
+  .side .who .name{font-size:17px;font-weight:500;}
+  .sec-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--text-3);margin-bottom:8px;}
+  .sheet-line{display:flex;gap:10px;}
+  .sheet-line .sl{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 11px;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--text-3);}
+  .sheet-line .sl b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;}
+  .kit{display:flex;flex-direction:column;gap:6px;}
+  .kit-row{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-2);}
+  .kit-row svg{color:var(--ember-2);flex:none;}
+  .kit-row .kn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .kit-row .kt{font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums;}
+  .qmini{display:flex;flex-direction:column;gap:6px;}
+  .qmini-row{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-2);}
+  .qmini-row svg{color:var(--ember-2);flex:none;}
+  .navlink.is-soon{opacity:.45;cursor:default;}
+  .navlink.is-soon:hover{background:transparent;color:var(--text-2);}
+
+  /* main scene */
+  .scene{padding:0;display:flex;flex-direction:column;min-height:0;}
+  .scene-topbar{display:flex;align-items:center;justify-content:space-between;padding:15px 22px;border-bottom:1px solid var(--line);}
+  .scene-topbar .loc{font-size:14px;font-weight:600;}
+  .scene-topbar .turn{font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:6px;}
+  .scene-topbar .turn svg{width:14px;height:14px;}
+  .scene-body{flex:1;overflow-y:auto;padding:26px 30px;display:flex;flex-direction:column;gap:20px;min-height:0;}
+  #enemy-panel:empty{display:none;}
+  #dice:empty{display:none;}
+  .cards-empty{display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--text-3);text-align:center;padding:40px 20px;font-size:14px;}
+  .cards-empty svg{width:26px;height:26px;color:var(--text-3);}
+
+  /* end-of-run summary stub */
+  .summary-stub{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:60px 24px;margin:auto;}
+  .summary-stub h2{font-size:26px;font-weight:500;}
+  .summary-stub p{color:var(--text-3);font-size:14px;max-width:360px;}
+
+  @media (max-width:760px){
+    .glass-shell{height:auto;min-height:100vh;}
+    .shell{display:flex;flex-direction:column;border-radius:0;height:auto;}
+    .side{display:none;}
+    .scene-body{padding:20px;}
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="flex h-screen overflow-hidden">
+<div class="sess-wrap">
+  <div class="glass-shell">
+    <div class="shell">
 
-    {# ===== LEFT SIDEBAR ===== #}
-    <aside class="w-60 flex-shrink-0 bg-dm-surface border-r border-dm-muted/20 flex flex-col p-4 gap-5">
+      {% include "game/_sheet.html" %}
 
-        {# Character identity #}
-        <div>
-            <h2 class="text-base font-bold text-dm-accent leading-tight">
-                {{ session.character.name }}
-            </h2>
-            <p class="text-xs text-dm-muted mt-0.5">
-                {{ session.character.get_race_display }}
-                &middot;
-                {{ session.character.get_character_class_display }}
-            </p>
-            <p class="text-xs text-dm-muted">Level {{ session.character.level }}</p>
+      <section class="main scene">
+
+        <div class="scene-topbar">
+          <div class="loc">{{ session.scenario.title }}</div>
+          <div class="turn"><svg data-lucide="git-branch"></svg> Turn {{ session.turn_count }} · {{ session.world.name }}</div>
         </div>
 
-        {# HP bar #}
-        <div>
-            <div class="flex justify-between text-xs text-dm-muted mb-1">
-                <span>HP</span>
-                <span>{{ session.character.current_hp }} / {{ session.character.max_hp }}</span>
+        <div class="scene-body">
+          {% if session.status == "DEAD" or session.status == "COMPLETED" %}
+            {% include "legacy/session_summary.html" %}
+          {% else %}
+            {# Frozen fragment mount points — targets for the turn JS/HTMX #}
+            <div id="enemy-panel">{% include "game/_enemy.html" %}</div>
+            <div id="dice"></div>
+            <div id="cards">
+              {% include "game/_cards.html" %}
             </div>
-            {% widthratio session.character.current_hp session.character.max_hp 100 as hp_percent %}
-            <div class="w-full bg-dm-muted/20 rounded-full h-2">
-                <div class="h-2 rounded-full transition-all duration-300
-                    {% if hp_percent >= 100 %}bg-green-500
-                    {% elif hp_percent > 50 %}bg-yellow-400
-                    {% else %}bg-red-500{% endif %}"
-                     style="width: {{ hp_percent }}%">
-                </div>
-            </div>
+          {% endif %}
         </div>
 
-        {# Labelled stats #}
-        <div class="flex flex-col gap-1.5">
-            <div class="flex justify-between text-xs">
-                <span class="text-dm-muted">Armour Class</span>
-                <span class="text-dm-text font-medium">{{ session.character.armor_class }}</span>
-            </div>
-            <div class="flex justify-between text-xs">
-                <span class="text-dm-muted">Speed</span>
-                <span class="text-dm-text font-medium">{{ session.character.speed }} ft</span>
-            </div>
-        </div>
+      </section>
 
-        {# World / scenario info #}
-        <div class="border-t border-dm-muted/20 pt-3 text-xs">
-            <p class="font-semibold text-dm-text">{{ session.world.name }}</p>
-            <p class="text-dm-muted mt-0.5">{{ session.scenario.title }}</p>
-        </div>
-
-        {# Dashboard link — pinned to bottom #}
-        <div class="mt-auto">
-            <a href="{% url 'game:dashboard' %}"
-               class="text-xs text-dm-muted hover:text-dm-accent transition-colors">
-                ← Dashboard
-            </a>
-        </div>
-    </aside>
-
-    {# ===== MAIN AREA ===== #}
-    <main class="flex-1 flex flex-col min-w-0 bg-dm-bg">
-
-        {# Scrollable message history #}
-        <div id="messages"
-             class="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-            {% include "game/_messages.html" with new_messages=messages %}
-        </div>
-
-        {# ===== INPUT BAR ===== #}
-        <div class="border-t border-dm-muted/20 p-3 bg-dm-surface"
-             x-data="{ message: '', sending: false }"
-             x-on:htmx:before-request="sending = true"
-             x-on:htmx:after-request="
-                 sending = false;
-                 message = '';
-                 $nextTick(() => {
-                     const c = document.getElementById('messages');
-                     c.scrollTop = c.scrollHeight;
-                 })
-             ">
-
-            <form hx-post="{% url 'game:send_message' session.id %}"
-                  hx-target="#messages"
-                  hx-swap="beforeend"
-                  class="flex gap-2 items-end">
-                {% csrf_token %}
-
-                <textarea
-                    name="message"
-                    x-model="message"
-                    @keydown.ctrl.enter.prevent="
-                        if (!sending && message.trim()) {
-                            htmx.trigger($el.closest('form'), 'submit');
-                        }
-                    "
-                    placeholder="Describe your action… (Ctrl+Enter to send)"
-                    rows="2"
-                    class="flex-1 resize-none rounded-lg p-3 text-sm"
-                ></textarea>
-
-                <button type="submit"
-                        :disabled="sending || !message.trim()"
-                        :class="{
-                            'opacity-40 cursor-not-allowed': sending || !message.trim(),
-                            'hover:opacity-90': !sending && message.trim()
-                        }"
-                        class="bg-dm-accent text-dm-bg font-semibold px-4 py-2 rounded-lg transition-opacity self-end text-sm">
-                    <span x-show="!sending">Send</span>
-                    <span x-show="sending" x-cloak>…</span>
-                </button>
-            </form>
-        </div>
-    </main>
+    </div>
+  </div>
 </div>
+{% endblock %}
 
-{# Auto-scroll to bottom on initial page load #}
+{% block extra_js %}
+<style>
+  /* player HP hit/heal feedback on #hp-bar (shared .bar lives inside) */
+  #hp-bar.fx-hit{animation:hpshake .4s var(--ease);}
+  @keyframes hpshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
+  #hp-bar.fx-heal .bar i{filter:brightness(1.6);transition:filter .5s;}
+  @media (prefers-reduced-motion:reduce){#hp-bar.fx-hit{animation:none;}#hp-bar.fx-heal .bar i{filter:none;}}
+</style>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var c = document.getElementById('messages');
-        if (c) { c.scrollTop = c.scrollHeight; }
-    });
+(function(){
+  const REDUCE = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const dashboardUrl = "{% url 'game:dashboard' %}";
+
+  function setPlayerHp(cur, max){
+    const wrap = document.getElementById('hp-bar');
+    if(!wrap || cur == null) return;
+    const fill = wrap.querySelector('.bar i');
+    const lbl  = wrap.querySelector('span:last-child');
+    const pct = max ? Math.max(0, Math.min(100, Math.round(cur/max*100))) : 0;
+    if(fill){
+      fill.style.width = pct + '%';
+      fill.classList.toggle('wounded', pct <= 33);
+    }
+    if(lbl && max != null) lbl.textContent = cur + ' / ' + max;
+    return pct;
+  }
+
+  function flashPlayer(kind){
+    const wrap = document.getElementById('hp-bar');
+    if(!wrap || REDUCE) return;
+    wrap.classList.remove('fx-hit','fx-heal');
+    void wrap.offsetWidth;
+    wrap.classList.add(kind === 'heal' ? 'fx-heal' : 'fx-hit');
+  }
+
+  // HP change from any turn (cards DEV-55 emits dm:hp; combat emits player_hp)
+  function applyHp(d){
+    if(d.current_hp != null){ setPlayerHp(d.current_hp, d.max_hp); }
+    else if(d.player_hp != null){ setPlayerHp(d.player_hp); }
+    if((d.hp_change != null && d.hp_change < 0) || d.hit) flashPlayer('hit');
+    else if(d.hp_change != null && d.hp_change > 0) flashPlayer('heal');
+    // player death → run is final, hand off to summary (FE-12)
+    if(d.is_dead || d.player_dead){
+      document.dispatchEvent(new CustomEvent('dm:player-dead'));
+      setTimeout(function(){ window.location.assign(dashboardUrl); }, 1400);
+    }
+  }
+
+  document.addEventListener('dm:hp', e => applyHp(e.detail || {}));
+  document.addEventListener('dm:combat-hp', e => applyHp(e.detail || {}));
+})();
 </script>
 {% endblock %}
