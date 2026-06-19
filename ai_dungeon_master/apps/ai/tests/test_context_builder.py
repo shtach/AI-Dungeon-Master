@@ -75,12 +75,12 @@ def test_prompt_bounded_after_many_turns(mock_game_data):
     mock_session.turn_count = 100
     mock_session.summary = "Early turns summary."
 
-    fake_messages = [MagicMock(role="user", content=f"msg {i}") for i in range(100)]
+    fake_messages = [MagicMock(role="user", content=f"msg_{i}_end") for i in range(100)]
     mock_messages_manager.order_by.return_value.__getitem__.return_value = fake_messages[-CONTEXT_WINDOW_MESSAGES:]
 
     result = build_prompt(mock_session, "Final action")
 
-    included = sum(1 for i in range(100) if f"msg {i}" in result)
+    included = sum(1 for i in range(100) if f"msg_{i}_end" in result)
     assert included <= CONTEXT_WINDOW_MESSAGES
     assert "Early turns summary." in result
 
