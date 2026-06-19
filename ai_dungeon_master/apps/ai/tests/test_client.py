@@ -14,6 +14,7 @@ from django.test import override_settings
 
 from ai_dungeon_master.apps.ai.client import get_ai_client
 from ai_dungeon_master.apps.ai.exceptions import AIClientError, AIProviderError
+from ai_dungeon_master.apps.ai.metering import MeteredClient
 from ai_dungeon_master.apps.ai.providers.mock import MockProvider
 from ai_dungeon_master.apps.ai.providers.ollama import OllamaProvider
 
@@ -32,7 +33,8 @@ class TestGetAiClient:
     @override_settings(AI_PROVIDER="mock")
     def test_returns_mock_provider(self):
         client = get_ai_client()
-        assert isinstance(client, MockProvider)
+        assert isinstance(client, MeteredClient)
+        assert isinstance(client._inner, MockProvider)
 
     @override_settings(AI_PROVIDER="unknown_provider")
     def test_raises_for_unknown_provider(self):
