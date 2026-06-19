@@ -6,6 +6,7 @@ from django.views.generic import TemplateView
 
 from ai_dungeon_master.apps.characters.models import Character
 from ai_dungeon_master.apps.game.models import GameSession, Message
+from ai_dungeon_master.apps.game.quests.models import Quest
 from ai_dungeon_master.apps.world.models import Scenario, WorldSetting
 
 
@@ -50,6 +51,21 @@ class GameSessionView(LoginRequiredMixin, View):
         return render(request, "game/session.html", {
             "session": session,
             "messages": messages,
+        })
+
+
+class QuestLogView(LoginRequiredMixin, View):
+    def get(self, request, session_id):
+        session = get_object_or_404(GameSession, id=session_id, user=request.user)
+        offered_quests = Quest.objects.filter(session=session, status=Quest.Status.OFFERED)
+        active_quests = Quest.objects.filter(session=session, status=Quest.Status.ACTIVE)
+        completed_quests = Quest.objects.filter(session=session, status=Quest.Status.COMPLETED)
+
+        return render(request, "game/quests.html", {
+            "session": session,
+            "offered_quests": offered_quests,
+            "active_quests": active_quests,
+            "completed_quests": completed_quests,
         })
 
 
