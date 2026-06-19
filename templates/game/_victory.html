@@ -1,0 +1,26 @@
+{% comment %}
+  Victory fragment (DEV-60 #15). Brief triumphant in-scene beat.
+  After combat/quest completion, before the session summary.
+{% endcomment %}
+<div class="summary-stub" style="animation:reveal .6s var(--ease) both;">
+  <span class="eyebrow" style="color:var(--gold);background:rgba(212,175,90,.1);border-color:rgba(212,175,90,.3);">
+    <svg data-lucide="trophy"></svg> Victory
+  </span>
+  <h2 class="serif" style="font-size:28px;">{{ session.character.name }} prevails</h2>
+  <p style="color:var(--text-3);font-size:14px;max-width:380px;">
+    {% if session.status == "COMPLETED" %}
+      The tale has reached its end. Your hero's legend will be remembered.
+    {% else %}
+      The enemy has fallen. Search the remains and press on.
+    {% endif %}
+  </p>
+  {% if session.status == "COMPLETED" %}
+  <a class="btn btn-primary" href="{% url 'legacy:session_summary' session.id %}">
+    View your legacy <svg data-lucide="arrow-right" class="sm"></svg>
+  </a>
+  {% endif %}
+  <a class="btn btn-ghost" href="{% url 'game:dashboard' %}">
+    <svg data-lucide="layout-grid" class="sm"></svg> Back to your heroes
+  </a>
+</div>
+<script>if(window.lucide) lucide.createIcons();</script>
