@@ -72,7 +72,8 @@ class TestGetAiClient:
     @override_settings(AI_PROVIDER="ollama")
     def test_returns_ollama_provider(self):
         client = get_ai_client()
-        assert isinstance(client, OllamaProvider)
+        assert isinstance(client, MeteredClient)
+        assert isinstance(client._inner, OllamaProvider)
 
 
 class TestOllamaProvider:
