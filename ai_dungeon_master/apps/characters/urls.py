@@ -8,4 +8,5 @@ urlpatterns = [
     path("create/step2/", views.CharacterCreateStep2View.as_view(), name="create_step2"),
     path("create/step3/", views.CharacterCreateStep3View.as_view(), name="create_step3"),
     path("create/step4/", views.CharacterCreateStep4View.as_view(), name="create_step4"),
+    path("create/legacy/", views.CharacterCreateLegacyView.as_view(), name="create_legacy"),
 ]

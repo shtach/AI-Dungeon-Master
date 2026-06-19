@@ -233,6 +233,110 @@ class CharacterCreateStep4View(LoginRequiredMixin, View):
         return redirect(url)
 
 
+class CharacterCreateLegacyView(LoginRequiredMixin, View):
+    def get(self, request):
+        from ai_dungeon_master.apps.legacy.models import OwnedPerk, PlayerProfile, Relic
+        wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
+        if not wizard_data.get("stats"):
+            return redirect("characters:create_step3")
+
+        profile, _ = PlayerProfile.objects.get_or_create(user=request.user)
+        relics = Relic.objects.filter(profile=profile)
+        owned_perks = OwnedPerk.objects.filter(profile=profile).select_related("perk")
+
+        return render(request, "characters/create_legacy.html", {
+            "relics": relics,
+            "owned_perks": [op.perk for op in owned_perks],
+        })
+
+    def post(self, request):
+        relic_id = request.POST.get("relic_id")
+        if relic_id:
+            request.session["chosen_relic_id"] = int(relic_id)
+
+        wizard_data = request.session.get(WIZARD_SESSION_KEY, {})
+        if not wizard_data:
+            return redirect("characters:create_step1")
+
+        background = request.POST.get("background", "").strip()
+        stats = wizard_data.get("stats", {})
+
+        character = Character(
+            user=request.user,
+            name=wizard_data.get("name"),
+            race=wizard_data.get("race"),
+            character_class=wizard_data.get("character_class"),
+            background=background,
+            strength=stats.get("strength"),
+            dexterity=stats.get("dexterity"),
+            constitution=stats.get("constitution"),
+            intelligence=stats.get("intelligence"),
+            wisdom=stats.get("wisdom"),
+            charisma=stats.get("charisma"),
+        )
+        character.save()
+
+        from .models import InventoryItem
+
+        c_class = character.character_class
+        if c_class == "WARRIOR":
+            InventoryItem.objects.create(
+                character=character, name="Longsword", item_type="Weapon",
+                slot="WEAPON", equipped=True, damage_die="1d8", attack_stat="strength",
+            )
+            InventoryItem.objects.create(
+                character=character, name="Chainmail", item_type="Armor", slot="ARMOR", equipped=True, ac_bonus=2
+            )
+        elif c_class == "WIZARD":
+            InventoryItem.objects.create(
+                character=character, name="Wooden Staff", item_type="Weapon",
+                slot="WEAPON", equipped=True, damage_die="1d6", attack_stat="intelligence",
+            )
+            InventoryItem.objects.create(
+                character=character, name="Scholar's Robe", item_type="Armor", slot="ARMOR", equipped=True, ac_bonus=1
+            )
+        elif c_class == "ROGUE":
+            InventoryItem.objects.create(
+                character=character, name="Steel Dagger", item_type="Weapon",
+                slot="WEAPON", equipped=True, damage_die="1d4", attack_stat="dexterity",
+            )
+            InventoryItem.objects.create(
+                character=character, name="Leather Armor", item_type="Armor", slot="ARMOR", equipped=True, ac_bonus=1
+            )
+        elif c_class == "CLERIC":
+            InventoryItem.objects.create(
+                character=character, name="Holy Mace", item_type="Weapon",
+                slot="WEAPON", equipped=True, damage_die="1d6", attack_stat="strength",
+            )
+            InventoryItem.objects.create(
+                character=character, name="Scale Mail", item_type="Armor", slot="ARMOR", equipped=True, ac_bonus=2
+            )
+
+        relic_id = request.session.pop("chosen_relic_id", None)
+        if relic_id:
+            from ai_dungeon_master.apps.legacy.models import Relic
+            relic = Relic.objects.filter(id=relic_id, profile__user=request.user).first()
+            if relic:
+                InventoryItem.objects.create(
+                    character=character, name=relic.name, item_type="Relic",
+                    slot=relic.slot, equipped=True,
+                    damage_die=relic.damage_die, attack_stat=relic.attack_stat,
+                    hit_bonus=relic.hit_bonus, ac_bonus=relic.ac_bonus,
+                    stat_bonuses=relic.stat_bonuses,
+                )
+
+        from ai_dungeon_master.apps.legacy.models import OwnedPerk, PlayerProfile
+        profile, _ = PlayerProfile.objects.get_or_create(user=request.user)
+        for op in OwnedPerk.objects.filter(profile=profile).select_related("perk"):
+            _apply_perk_to_character(character, op.perk)
+
+        if WIZARD_SESSION_KEY in request.session:
+            del request.session[WIZARD_SESSION_KEY]
+
+        url = reverse("game:create_session") + f"?character_id={character.id}"
+        return redirect(url)
+
+
 def _apply_perk_to_character(character, perk):
     from .models import InventoryItem
 
