@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import F
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views import View
@@ -44,6 +45,10 @@ class TakeLootView(LoginRequiredMixin, View):
 
         session.pending_loot = None
         session.save(update_fields=["pending_loot"])
+
+        GameSession.objects.filter(id=session.id).update(
+            items_found=F("items_found") + 1
+        )
 
         return JsonResponse({"taken": True, "item_id": item.id, "name": item.name})
 
