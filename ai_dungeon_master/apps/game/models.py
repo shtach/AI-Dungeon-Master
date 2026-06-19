@@ -36,6 +36,17 @@ class GameSession(models.Model):
     )
     pending_loot = models.JSONField(null=True, blank=True, help_text="Pending loot from AI")
 
+    kills = models.IntegerField(default=0)
+    dice_rolled = models.IntegerField(default=0)
+    nat20s = models.IntegerField(default=0)
+    nat1s = models.IntegerField(default=0)
+    damage_dealt = models.IntegerField(default=0)
+    damage_taken = models.IntegerField(default=0)
+    quests_completed = models.IntegerField(default=0)
+    items_found = models.IntegerField(default=0)
+    gold_gathered = models.IntegerField(default=0)
+    highest_roll = models.IntegerField(default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
