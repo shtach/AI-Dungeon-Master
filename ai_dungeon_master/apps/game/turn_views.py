@@ -1,5 +1,6 @@
 import json
 import logging
+import random
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import F
@@ -12,6 +13,7 @@ from ai_dungeon_master.apps.ai.context_builder import build_prompt
 from ai_dungeon_master.apps.ai.exceptions import AIClientError, AIProviderError
 from ai_dungeon_master.apps.ai.parser import parse_ai_response
 from ai_dungeon_master.apps.characters.models import Character
+from ai_dungeon_master.apps.characters.stats import ability_mod
 from ai_dungeon_master.apps.game.models import GameSession, Message
 from ai_dungeon_master.apps.game.quests.models import Quest
 
@@ -27,6 +29,14 @@ def _filter_cards_by_inventory(cards: list, character: Character) -> list:
         character.inventory.values_list("name", flat=True).values_list("name", flat=True)
     )
     return [c for c in cards if not c.get("requires") or c["requires"] in inventory_names]
+
+
+def _roll_dice(character: Character, stat: str | None, dc: int | None) -> dict:
+    roll = random.randint(1, 20)
+    modifier = ability_mod(character, stat) if stat else 0
+    total = roll + modifier
+    success = total >= dc if dc is not None else None
+    return {"roll": roll, "modifier": modifier, "total": total, "dc": dc, "success": success}
 
 
 def _process_quests(session: GameSession, parsed: dict) -> None:
@@ -131,9 +141,17 @@ class CardClickView(LoginRequiredMixin, View):
             content=label,
         )
 
+        dice_result = None
+        if card_roll:
+            dice_result = _roll_dice(session.character, card_roll, card_dc)
+
         try:
             ai_client = get_ai_client()
-            full_prompt = build_prompt(session, label, ai_client)
+            if dice_result:
+                roll_info = f" (Roll: {dice_result['total']}, DC: {dice_result['dc']}, {'Success' if dice_result['success'] else 'Failure'})"
+                full_prompt = build_prompt(session, f"{label}{roll_info}", ai_client)
+            else:
+                full_prompt = build_prompt(session, label, ai_client)
             ai_response_text = ai_client.generate(full_prompt)
         except AIProviderError as e:
             logger.warning("AI provider error: %s", e)
@@ -166,17 +184,10 @@ class CardClickView(LoginRequiredMixin, View):
 
         _process_quests(session, parsed)
 
-        if card_roll:
-            dice_payload = {
-                "roll": card_roll,
-                "dc": card_dc,
-            }
-            return JsonResponse(_build_response_payload(parsed, dice_payload, hp_payload))
-
         session.turn_count += 1
         session.save(update_fields=["turn_count"])
 
-        return JsonResponse(_build_response_payload(parsed, hp_payload=hp_payload))
+        return JsonResponse(_build_response_payload(parsed, dice_result, hp_payload))
 
 
 class ResolveView(LoginRequiredMixin, View):
