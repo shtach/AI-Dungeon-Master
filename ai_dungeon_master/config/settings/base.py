@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "ai_dungeon_master.apps.game.quests",
     "ai_dungeon_master.apps.world",
     "ai_dungeon_master.apps.core",
+    "ai_dungeon_master.apps.legacy",
 ]
 
 MIDDLEWARE = [
