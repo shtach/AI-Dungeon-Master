@@ -1,147 +1,128 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard — AI Dungeon Master{% endblock %}
+{% block title %}Your heroes — AI Dungeon Master{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col">
+<div style="min-height:100vh;display:flex;flex-direction:column;position:relative;">
+    <div class="page-wash"></div>
+    {% if not characters_with_sessions %}<div class="embers" id="embers"></div>{% endif %}
 
-  <!-- Header -->
-  <header class="flex items-center justify-between px-6 py-4 border-b border-dm-muted/20">
-    <span class="text-dm-accent font-bold text-lg tracking-tight">⚔ AI Dungeon Master</span>
-    <div class="flex items-center gap-4">
-      <span class="text-dm-muted text-sm">{{ request.user.username }}</span>
-      <form method="post" action="{% url 'accounts:logout' %}">
-        {% csrf_token %}
-        <button type="submit" class="text-dm-muted hover:text-dm-text text-sm transition-colors">
-          Logout
-        </button>
-      </form>
-    </div>
-  </header>
-
-  <!-- Main -->
-  <main class="flex-1 max-w-5xl w-full mx-auto px-6 py-10 flex flex-col gap-12">
-
-    <!-- Section: Characters -->
-    <section>
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-bold text-dm-text">Your characters</h2>
-        {% if characters_with_sessions %}
-        <a href="{% url 'characters:create_step1' %}"
-           class="text-sm text-dm-accent hover:underline">
-          ＋ New character
-        </a>
-        {% endif %}
-      </div>
-
-      {% if not characters_with_sessions %}
-      <!-- Empty state -->
-      <div class="flex flex-col items-center justify-center gap-4 py-20
-                  border border-dashed border-dm-muted/30 rounded-2xl text-center">
-        <p class="text-4xl">🗺</p>
-        <p class="text-dm-muted text-sm">You don't have any characters yet.</p>
-        <a href="{% url 'characters:create_step1' %}"
-           class="mt-2 bg-dm-accent text-dm-bg font-semibold px-6 py-2
-                  rounded-xl hover:opacity-90 transition-opacity text-sm">
-          Create your first character →
-        </a>
-      </div>
-
-      {% else %}
-      <!-- Character grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {% for character, session, hp_pct in characters_with_sessions %}
-        <div class="bg-dm-surface border border-dm-muted/20 rounded-2xl p-6 flex flex-col gap-4">
-
-          <!-- Name + meta -->
-          <div>
-            <h3 class="text-lg font-bold text-dm-accent">{{ character.name }}</h3>
-            <p class="text-dm-muted text-xs mt-0.5">
-              {{ character.get_race_display }} ·
-              {{ character.get_character_class_display }} ·
-              Level {{ character.level }}
-            </p>
-          </div>
-
-          <!-- HP bar -->
-          <div>
-            <div class="flex justify-between text-xs text-dm-muted mb-1">
-              <span>HP</span>
-              <span>{{ character.current_hp }} / {{ character.max_hp }}</span>
-            </div>
-            <div class="h-2 rounded-full bg-dm-bg overflow-hidden">
-              <div class="h-2 rounded-full transition-all duration-300
-                {% if character.current_hp == character.max_hp %}
-                  bg-green-500
-                {% elif hp_pct > 50 %}
-                  bg-yellow-500
-                {% else %}
-                  bg-red-500
-                {% endif %}"
-                style="width: {{ hp_pct }}%">
-              </div>
-            </div>
-          </div>
-
-          <!-- Action button -->
-          <div class="mt-auto pt-2">
-            {% if session %}
-            <a href="{% url 'game:session' session.id %}"
-               class="block w-full text-center bg-dm-accent text-dm-bg font-semibold
-                      py-2 rounded-xl hover:opacity-90 transition-opacity text-sm">
-              Continue →
-            </a>
-            {% else %}
-            <a href="{% url 'game:create_session' %}?character_id={{ character.id }}"
-               class="block w-full text-center border border-dm-accent text-dm-accent font-semibold
-                      py-2 rounded-xl hover:bg-dm-accent hover:text-dm-bg transition-all text-sm">
-              New game
-            </a>
-            {% endif %}
-          </div>
-
+    <!-- Topbar -->
+    <header class="topbar" style="position:relative;z-index:2;">
+        {% include "partials/_brand.html" with brand_size="sm" brand_icon="swords" %}
+        <div style="display:flex;align-items:center;gap:16px;">
+            <span style="font-size:13px;color:var(--text-2);">{{ request.user.username }}</span>
+            <form method="post" action="{% url 'accounts:logout' %}" style="display:flex;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost" style="padding:7px 12px;font-size:13px;">Sign out</button>
+            </form>
         </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-    </section>
+    </header>
 
-    <!-- Section: Active Sessions (only when non-empty) -->
-    {% if active_sessions %}
-    <section>
-      <h2 class="text-xl font-bold text-dm-text mb-6">Active sessions</h2>
-      <div class="bg-dm-surface border border-dm-muted/20 rounded-2xl overflow-hidden">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-dm-muted/20 text-dm-muted text-xs uppercase tracking-wide">
-              <th class="text-left px-5 py-3">Character</th>
-              <th class="text-left px-5 py-3">World</th>
-              <th class="text-left px-5 py-3">Scenario</th>
-              <th class="text-right px-5 py-3">Turns</th>
-              <th class="px-5 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for session in active_sessions %}
-            <tr class="border-b border-dm-muted/10 last:border-0 hover:bg-dm-bg/50 transition-colors">
-              <td class="px-5 py-4 text-dm-text font-medium">{{ session.character.name }}</td>
-              <td class="px-5 py-4 text-dm-muted">{{ session.world.name }}</td>
-              <td class="px-5 py-4 text-dm-muted">{{ session.scenario.title }}</td>
-              <td class="px-5 py-4 text-dm-muted text-right font-mono">{{ session.turn_count }}</td>
-              <td class="px-5 py-4 text-right">
-                <a href="{% url 'game:session' session.id %}"
-                   class="text-dm-accent hover:underline text-xs">
-                  Resume →
-                </a>
-              </td>
-            </tr>
+    <main style="flex:1;max-width:1080px;width:100%;margin:0 auto;padding:40px 26px 60px;position:relative;z-index:2;">
+
+        {% if not characters_with_sessions %}
+        <!-- Empty state -->
+        <div class="reveal" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:80px 20px;">
+            <span class="eyebrow"><svg data-lucide="sparkles"></svg> Your heroes</span>
+            <h1 class="serif" style="font-size:32px;font-weight:500;margin:18px 0 8px;">No legends yet</h1>
+            <p style="color:var(--text-3);font-size:15px;max-width:380px;margin-bottom:26px;">Every story begins with a single hero. Forge yours and step into the dark.</p>
+            <a href="{% url 'characters:create_step1' %}" class="btn btn-primary">
+                Create your first character <svg data-lucide="arrow-right" class="sm"></svg>
+            </a>
+        </div>
+
+        {% else %}
+        <!-- Populated: character grid -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+            <span class="eyebrow"><svg data-lucide="swords"></svg> Your heroes</span>
+            <a href="{% url 'characters:create_step1' %}" class="btn btn-ghost" style="padding:8px 14px;font-size:13px;">
+                <svg data-lucide="plus" class="sm"></svg> New character
+            </a>
+        </div>
+
+        <div class="stagger" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+            {% for character, session, hp_pct in characters_with_sessions %}
+            <div class="card" style="padding:20px 22px;display:flex;flex-direction:column;gap:16px;">
+                <div style="display:flex;align-items:center;gap:13px;">
+                    <div style="width:44px;height:44px;border-radius:11px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--ember-2);flex:none;">
+                        <svg data-lucide="user-round"></svg>
+                    </div>
+                    <div style="min-width:0;">
+                        <h3 class="serif" style="font-size:19px;font-weight:500;">{{ character.name }}</h3>
+                        <p style="font-size:13px;color:var(--text-2);">{{ character.get_race_display }} {{ character.get_character_class_display }} · Level {{ character.level }}</p>
+                    </div>
+                </div>
+
+                <!-- HP bar -->
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:1.1px;color:var(--text-3);margin-bottom:6px;">
+                        <span>Health</span>
+                        <span style="color:var(--text-2);font-variant-numeric:tabular-nums;">{{ character.current_hp }} / {{ character.max_hp }}</span>
+                    </div>
+                    <div class="bar"><i class="{% if hp_pct <= 33 %}wounded{% endif %}" style="width:{{ hp_pct }}%;"></i></div>
+                </div>
+
+                <!-- Action -->
+                <div style="margin-top:auto;padding-top:2px;">
+                    {% if session %}
+                    <a href="{% url 'game:session' session.id %}" class="btn btn-primary btn-block">
+                        Continue <svg data-lucide="arrow-right" class="sm"></svg>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'game:create_session' %}?character_id={{ character.id }}" class="btn btn-ghost btn-block">
+                        New game <svg data-lucide="sparkles" class="sm"></svg>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
             {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </section>
-    {% endif %}
+        </div>
 
-  </main>
+        <!-- Active sessions list -->
+        {% if active_sessions %}
+        <div style="margin-top:40px;">
+            <span class="eyebrow"><svg data-lucide="book-open"></svg> Active sessions</span>
+            <div class="card" style="margin-top:16px;padding:0;overflow:hidden;">
+                {% for session in active_sessions %}
+                <a href="{% url 'game:session' session.id %}"
+                   style="display:flex;align-items:center;gap:14px;padding:15px 20px;{% if not forloop.last %}border-bottom:1px solid var(--line);{% endif %}transition:background .14s;"
+                   onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background='transparent'">
+                    <div style="width:36px;height:36px;border-radius:9px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--ember-2);flex:none;">
+                        <svg data-lucide="scroll-text" class="sm"></svg>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:14px;font-weight:500;">{{ session.character.name }} · <span style="color:var(--text-2);font-weight:400;">{{ session.scenario.title }}</span></div>
+                        <div style="font-size:12.5px;color:var(--text-3);">{{ session.world.name }} · turn {{ session.turn_count }}</div>
+                    </div>
+                    <span style="font-size:12.5px;color:var(--ember-2);display:flex;align-items:center;gap:5px;flex:none;">Resume <svg data-lucide="arrow-right" style="width:13px;height:13px;"></svg></span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+    </main>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not characters_with_sessions %}
+<script>
+    (function(){
+      const e=document.getElementById('embers');
+      if(!e||window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+      for(let i=0;i<24;i++){
+        const s=document.createElement('span');s.className='ember';
+        s.style.left=Math.random()*100+'%';
+        s.style.animationDuration=(8+Math.random()*9)+'s';
+        s.style.animationDelay=(-Math.random()*14)+'s';
+        s.style.opacity=Math.random()*.5+.2;
+        s.style.transform=`scale(${Math.random()*1.6+.6})`;
+        e.appendChild(s);
+      }
+    })();
+</script>
+{% endif %}
 {% endblock %}
