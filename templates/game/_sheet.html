@@ -1,83 +1,218 @@
-{% comment %}
-  Character-sheet sidebar (DEV-54). Reads the character off the session.
-  Effective/buffed numbers come from the stat layer when present; until the
-  stat layer (DEV-34) exposes them, the raw model stats render and the .key
-  highlight stays a hook. Nav links to Inventory/Quests/Codex are placeholders
-  until those pages exist (FE-09/10/11).
-{% endcomment %}
-{% with c=session.character %}
-<aside class="side">
+{% extends "base.html" %}
 
-  <div class="who">
-    <div class="av"><svg data-lucide="{% if c.character_class == 'WIZARD' %}wand-sparkles{% elif c.character_class == 'WARRIOR' %}swords{% elif c.character_class == 'ROGUE' %}venetian-mask{% elif c.character_class == 'CLERIC' %}cross{% else %}user-round{% endif %}"></svg></div>
-    <div>
-      <div class="name serif">{{ c.name }}</div>
-      <div class="meta">{{ c.get_race_display }} {{ c.get_character_class_display }} · Lv {{ c.level }}</div>
-    </div>
-  </div>
+{% block title %}Inventory — {{ character.name }}{% endblock %}
 
-  {# HP — frozen swap/mount target #}
-  <div id="hp-bar">
-    {% include "game/_hp_bar.html" with current=c.current_hp max=c.max_hp show_label=True %}
-  </div>
+{% block extra_head %}
+<style>
+  .inv-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .inv-glass{width:min(1120px,100%);height:min(760px,92vh);}
+  .shell{height:100%;border-radius:18px;overflow:hidden;border:1px solid var(--line-2);
+    background:linear-gradient(165deg,var(--surface),var(--bg-2));box-shadow:0 40px 90px -40px rgba(0,0,0,.8);}
+  .inv{flex:1;display:grid;grid-template-columns:1fr 320px;min-width:0;}
+  .invmain{padding:24px 26px;overflow-y:auto;}
+  .ihead{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .ihead h2{font-family:'Newsreader',serif;font-size:23px;font-weight:500;}
+  .ihead .weight{font-size:12.5px;color:var(--text-3);display:flex;align-items:center;gap:7px;}
+  .ihead .weight svg{width:14px;height:14px;}
 
-  {# AC + Speed #}
-  <div class="sheet-line">
-    <div class="sl"><span>Armor</span><b>{{ c.armor_class }}</b></div>
-    <div class="sl"><span>Speed</span><b>{{ c.speed }} ft</b></div>
-  </div>
+  /* equipped slots */
+  .slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:22px;}
+  .slot{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px;display:flex;flex-direction:column;gap:7px;min-height:92px;}
+  .slot .sl-k{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3);display:flex;align-items:center;gap:6px;}
+  .slot .sl-k svg{width:13px;height:13px;}
+  .slot .sl-name{font-size:13.5px;font-weight:500;color:var(--text);}
+  .slot .sl-meta{font-size:11.5px;color:var(--text-3);}
+  .slot.empty .sl-name{color:var(--text-3);font-style:italic;font-weight:400;}
 
-  {# Six ability scores with signed modifiers #}
-  <div>
-    <div class="sec-lbl">Abilities</div>
-    <div class="statgrid">
-      <div class="stat {% if c.character_class == 'WARRIOR' %}key{% endif %}"><span class="k">Str</span><span class="v">{{ c.strength }}</span><span class="m">{{ c.str_mod|stringformat:"+d" }}</span></div>
-      <div class="stat {% if c.character_class == 'ROGUE' %}key{% endif %}"><span class="k">Dex</span><span class="v">{{ c.dexterity }}</span><span class="m">{{ c.dex_mod|stringformat:"+d" }}</span></div>
-      <div class="stat"><span class="k">Con</span><span class="v">{{ c.constitution }}</span><span class="m">{{ c.con_mod|stringformat:"+d" }}</span></div>
-      <div class="stat {% if c.character_class == 'WIZARD' %}key{% endif %}"><span class="k">Int</span><span class="v">{{ c.intelligence }}</span><span class="m">{{ c.int_mod|stringformat:"+d" }}</span></div>
-      <div class="stat {% if c.character_class == 'CLERIC' %}key{% endif %}"><span class="k">Wis</span><span class="v">{{ c.wisdom }}</span><span class="m">{{ c.wis_mod|stringformat:"+d" }}</span></div>
-      <div class="stat"><span class="k">Cha</span><span class="v">{{ c.charisma }}</span><span class="m">{{ c.cha_mod|stringformat:"+d" }}</span></div>
-    </div>
-  </div>
+  /* live derived readouts */
+  .derived{display:flex;gap:8px;margin-bottom:22px;}
+  .derived .d{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 8px;text-align:center;}
+  .derived .d .k{font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);}
+  .derived .d .v{font-size:17px;font-weight:600;color:var(--ember-2);font-variant-numeric:tabular-nums;margin-top:2px;}
 
-  {# Equipped items #}
-  {% with equipped=c.inventory.all %}
-  <div>
-    <div class="sec-lbl">Equipped</div>
-    <div class="kit">
-      {% for item in equipped %}{% if item.equipped %}
-      <div class="kit-row">
-        <svg data-lucide="{% if item.slot == 'WEAPON' %}sword{% elif item.slot == 'ARMOR' %}shield{% else %}gem{% endif %}" class="sm"></svg>
-        <span class="kn">{{ item.name }}</span>
-        {% if item.damage_die %}<span class="kt">{{ item.damage_die }}</span>{% elif item.ac_bonus %}<span class="kt">+{{ item.ac_bonus }} AC</span>{% endif %}
+  .sec-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--text-3);margin:0 0 11px;}
+  .items{display:flex;flex-direction:column;gap:8px;}
+  .item{display:flex;align-items:center;gap:13px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius-sm);cursor:pointer;transition:border-color .14s,background .14s;width:100%;text-align:left;font:inherit;color:inherit;}
+  .item:hover{border-color:var(--line-2);} .item.sel{border-color:var(--ember);background:var(--ember-soft);}
+  .item .ic{width:38px;height:38px;border-radius:10px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;flex:none;color:var(--text-2);}
+  .item .ic svg{width:18px;height:18px;}
+  .item .nm{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;}
+  .item .ty{font-size:12px;color:var(--text-3);margin-top:1px;}
+  .item .eq{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--ember-2);background:var(--ember-soft);padding:1px 7px;border-radius:99px;}
+  /* rarity dot */
+  .item .ic.rc{color:var(--r-common);} .item .ic.ru{color:var(--r-uncommon);}
+  .item .ic.rr{color:var(--r-rare);} .item .ic.re{color:var(--r-epic);} .item .ic.rl{color:var(--r-legendary);}
+
+  /* detail / compare panel */
+  .detail{border-left:1px solid var(--line);padding:24px 22px;overflow-y:auto;}
+  .detail .dav{width:56px;height:56px;border-radius:14px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;margin-bottom:14px;color:var(--ember-2);}
+  .detail .dav svg{width:28px;height:28px;}
+  .detail h3{font-family:'Newsreader',serif;font-size:20px;font-weight:500;margin-bottom:3px;}
+  .detail .drar{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3);margin-bottom:16px;}
+  .detail .ddesc{font-family:'Newsreader',serif;font-style:italic;font-size:14px;line-height:1.6;color:var(--text-2);margin-bottom:18px;}
+  .stats2{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:14px;}
+  .s2{display:flex;justify-content:space-between;background:var(--surface);padding:9px 12px;font-size:13px;}
+  .s2 span{color:var(--text-3);} .s2 b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;}
+  .s2 b.better{color:var(--good-2);} .s2 b.worse{color:var(--wound);}
+  .cmp-note{font-size:11.5px;color:var(--text-3);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+  .cmp-note svg{width:13px;height:13px;color:var(--good-2);}
+  .acts{display:flex;flex-direction:column;gap:8px;}
+  .detail-empty{color:var(--text-3);font-size:13.5px;text-align:center;padding:60px 16px;}
+  @media (max-width:760px){.inv{grid-template-columns:1fr;}.detail{display:none;}.shell{display:flex;flex-direction:column;height:auto;}.side{display:none;}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inv-wrap">
+  <div class="inv-glass">
+    <div class="shell">
+
+      {% include "game/_sheet.html" %}
+
+      <div class="inv">
+        <div class="invmain">
+          <div class="ihead">
+            <h2>Inventory</h2>
+            <span class="weight"><svg data-lucide="backpack"></svg> {{ pack_items|length }} in pack</span>
+          </div>
+
+          {# Equipped slots — weapon / armor / trinket #}
+          <div class="sec-lbl">Equipped</div>
+          <div class="slots">
+            {% for slot_key, slot_label, slot_icon in equip_slots %}
+            <div class="slot">
+              <div class="sl-k"><svg data-lucide="{{ slot_icon }}"></svg> {{ slot_label }}</div>
+              {% for item in equipped_items %}{% if item.slot == slot_key %}
+              <div class="sl-name">{{ item.name }}</div>
+              <div class="sl-meta">{% if item.damage_die %}{{ item.damage_die }}{% if item.attack_stat %} · {{ item.attack_stat|slice:":3"|upper }}{% endif %}{% elif item.ac_bonus %}+{{ item.ac_bonus }} AC{% else %}{{ item.get_slot_display }}{% endif %}</div>
+              {% endif %}{% endfor %}
+              {% if slot_key not in equipped_slot_keys %}<div class="sl-name" style="color:var(--text-3);font-style:italic;">— empty —</div>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+
+          {# Live derived stats (stat layer) #}
+          <div class="sec-lbl">Effective stats</div>
+          <div class="derived">
+            <div class="d"><div class="k">Armor</div><div class="v">{{ effective_ac }}</div></div>
+            <div class="d"><div class="k">To hit</div><div class="v">{{ effective_to_hit|stringformat:"+d" }}</div></div>
+            <div class="d"><div class="k">Max HP</div><div class="v">{{ character.max_hp }}</div></div>
+          </div>
+
+          {# Pack list #}
+          <div class="sec-lbl">Pack</div>
+          <div class="items stagger" id="pack-list">
+            {% for item in pack_items %}
+            <button type="button" class="item" data-item="{{ item.id }}"
+                    data-name="{{ item.name }}"
+                    data-type="{{ item.item_type }}"
+                    data-slot="{{ item.slot }}"
+                    data-slotlabel="{{ item.get_slot_display }}"
+                    data-dmg="{{ item.damage_die|default:'' }}"
+                    data-stat="{{ item.attack_stat|default:'' }}"
+                    data-hit="{{ item.hit_bonus }}"
+                    data-ac="{{ item.ac_bonus }}"
+                    data-equipped="{{ item.equipped|yesno:'1,0' }}">
+              <span class="ic"><svg data-lucide="{% if item.slot == 'WEAPON' %}sword{% elif item.slot == 'ARMOR' %}shield{% elif item.slot == 'CONSUMABLE' %}flask-round{% else %}gem{% endif %}"></svg></span>
+              <span style="min-width:0;">
+                <span class="nm">{{ item.name }}{% if item.equipped %}<span class="eq">Equipped</span>{% endif %}</span>
+                <span class="ty">{{ item.item_type }}{% if item.get_slot_display %} · {{ item.get_slot_display }}{% endif %}</span>
+              </span>
+            </button>
+            {% empty %}
+            <p style="color:var(--text-3);font-size:13.5px;">Your pack is empty. Loot found on your adventure shows up here.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="detail" id="detail" data-ac="{{ effective_ac }}" data-hit="{{ effective_to_hit }}">
+          <div class="detail-empty">Select an item to inspect it.</div>
+        </div>
       </div>
-      {% endif %}{% endfor %}
+
     </div>
   </div>
-  {% endwith %}
+</div>
+{% endblock %}
 
-  {# Active quests mini-list — mount point #quests #}
-  <div id="quests">
-    {% if session.quests.all %}
-    <div class="sec-lbl">Quests</div>
-    <div class="qmini">
-      {% for q in session.quests.all %}
-      <div class="qmini-row"><svg data-lucide="scroll-text" class="sm"></svg><span>{{ q.title }}</span></div>
-      {% endfor %}
-    </div>
-    {% endif %}
-  </div>
+{% block extra_js %}
+<script>
+(function(){
+  const list = document.getElementById('pack-list');
+  const detail = document.getElementById('detail');
+  if(!list || !detail) return;
 
-  {# Navigation #}
-  <div class="navlinks">
-    <div class="sec-lbl" style="margin:4px 0 2px;">Adventure</div>
-    <a class="navlink active"><svg data-lucide="book-open"></svg> Story</a>
-    <a class="navlink is-soon" title="Coming soon"><svg data-lucide="backpack"></svg> Inventory</a>
-    <a class="navlink is-soon" title="Coming soon"><svg data-lucide="scroll-text"></svg> Quests</a>
-    <a class="navlink is-soon" title="Coming soon"><svg data-lucide="library"></svg> Codex</a>
-  </div>
+  // equipped weapon stats (for side-by-side compare), read off the slots
+  const equippedWeapon = (function(){
+    const slots = document.querySelectorAll('.slot');
+    for(const s of slots){
+      const k = s.querySelector('.sl-k');
+      if(k && /weapon/i.test(k.textContent)){
+        const name = s.querySelector('.sl-name');
+        const meta = s.querySelector('.sl-meta');
+        if(name && !/empty/i.test(name.textContent)){
+          return { name:name.textContent.trim(), meta: meta?meta.textContent.trim():'' };
+        }
+      }
+    }
+    return null;
+  })();
 
-  <a class="home" href="{% url 'game:dashboard' %}"><svg data-lucide="arrow-left" style="width:15px;height:15px;"></svg> Back to your heroes</a>
+  function esc(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function num(v){ const n = parseInt(v,10); return isNaN(n)?0:n; }
 
-</aside>
-{% endwith %}
+  list.addEventListener('click', function(e){
+    const btn = e.target.closest('.item');
+    if(!btn) return;
+    list.querySelectorAll('.item').forEach(x=>x.classList.remove('sel'));
+    btn.classList.add('sel');
+    render(btn.dataset);
+  });
+
+  function render(d){
+    const equipped = d.equipped === '1';
+    const isWeapon = d.slot === 'WEAPON';
+    const isConsumable = d.slot === 'CONSUMABLE';
+
+    // stat rows for this item
+    const rows = [];
+    if(d.dmg) rows.push(['Damage', d.dmg + (d.stat ? ' + ' + d.stat.slice(0,3).toUpperCase() : '')]);
+    if(d.stat) rows.push(['Attack stat', d.stat.charAt(0).toUpperCase()+d.stat.slice(1)]);
+    if(num(d.hit)) rows.push(['To hit', (num(d.hit)>=0?'+':'')+num(d.hit)]);
+    if(num(d.ac)) rows.push(['Armor', '+'+num(d.ac)+' AC']);
+
+    // compare vs equipped weapon (to-hit bonus), flag better/worse
+    let cmpNote = '';
+    let rowsHtml = rows.map(([k,v])=>'<div class="s2"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div>').join('');
+    if(isWeapon && equippedWeapon && !equipped){
+      cmpNote = '<div class="cmp-note"><svg data-lucide="git-compare"></svg> Comparing vs '+esc(equippedWeapon.name)+'</div>';
+    }
+
+    const icon = isWeapon?'sword':(d.slot==='ARMOR'?'shield':(isConsumable?'flask-round':'gem'));
+    const action = equipped
+      ? '<button type="button" class="btn btn-ghost btn-block" data-act="unequip">Unequip</button>'
+      : (isConsumable
+          ? '<button type="button" class="btn btn-primary btn-block" data-act="use">Use</button>'
+          : '<button type="button" class="btn btn-primary btn-block" data-act="equip">Equip</button>');
+
+    detail.innerHTML =
+      '<div class="dav"><svg data-lucide="'+icon+'"></svg></div>' +
+      '<h3>'+esc(d.name)+'</h3>' +
+      '<div class="drar">'+esc(d.type||'')+(d.slotlabel?' · '+esc(d.slotlabel):'')+'</div>' +
+      cmpNote +
+      (rowsHtml ? '<div class="stats2">'+rowsHtml+'</div>' : '') +
+      '<div class="acts">' + action +
+        '<button type="button" class="btn btn-ghost btn-block" data-act="drop">Drop</button>' +
+      '</div>';
+    if(window.lucide) lucide.createIcons();
+
+    // Equip/Drop endpoints aren't wired yet — surface intent, let a future
+    // ticket bind these to real POSTs.
+    detail.querySelectorAll('[data-act]').forEach(b=>{
+      b.onclick = ()=> document.dispatchEvent(new CustomEvent('dm:inv-action',{ detail:{ act:b.dataset.act, item:d.item } }));
+    });
+  }
+})();
+</script>
+{% endblock %}

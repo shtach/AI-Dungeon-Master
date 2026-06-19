@@ -1,0 +1,125 @@
+{% comment %}
+  Dice-roll fragment (DEV-56). Renders into #dice.
+  Consumes the roll endpoint payload (DEV-40):
+    {roll, modifier, total, dc, success}
+  The endpoint returns JSON (not HTML), so this fragment exposes a
+  client-side renderDice() and listens for a `dm:roll` event carrying the
+  payload (+ optional stat/gear labels the card knew about). CSS-only d20 —
+  no dice library. Reduced-motion skips the tumble and shows the result.
+{% endcomment %}
+
+<div id="dice-stage" aria-live="polite"></div>
+
+<style>
+  #dice{display:flex;}
+  #dice-stage{flex:1;display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px 10px;}
+  #dice-stage:empty{display:none;}
+
+  .d20{width:84px;height:84px;position:relative;display:flex;align-items:center;justify-content:center;
+    border-radius:18px;background:linear-gradient(150deg,var(--ember),#9a5226);
+    box-shadow:0 12px 34px -8px rgba(217,131,68,.5),inset 0 2px 6px rgba(255,255,255,.18);
+    color:#1a0f08;}
+  .d20 svg{width:34px;height:34px;stroke-width:2;position:absolute;opacity:.35;}
+  .d20 .face{position:relative;z-index:1;font-family:'Newsreader',serif;font-size:34px;font-weight:600;
+    font-variant-numeric:tabular-nums;}
+  .d20.nat20{background:linear-gradient(150deg,var(--good-2),var(--good));box-shadow:0 12px 34px -8px rgba(124,146,85,.6),inset 0 2px 6px rgba(255,255,255,.2);}
+  .d20.nat1{background:linear-gradient(150deg,var(--wound),var(--danger));box-shadow:0 12px 34px -8px rgba(176,68,40,.55),inset 0 2px 6px rgba(255,255,255,.15);}
+
+  .d20.tumble{animation:d20tumble .9s var(--ease) both;}
+  @keyframes d20tumble{
+    0%{transform:rotate(0) scale(.7);opacity:0;}
+    15%{opacity:1;}
+    25%{transform:rotate(220deg) scale(1.08);}
+    50%{transform:rotate(420deg) scale(.96);}
+    70%{transform:rotate(680deg) scale(1.04);}
+    100%{transform:rotate(720deg) scale(1);}
+  }
+  .d20 .face.flicker{animation:faceflicker .7s steps(8) both;}
+  @keyframes faceflicker{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .dice-breakdown{font-size:13.5px;color:var(--text-2);text-align:center;line-height:1.6;}
+  .dice-breakdown .bd-roll{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;}
+  .dice-breakdown .bd-mod{color:var(--ember-2);font-variant-numeric:tabular-nums;}
+  .dice-breakdown .bd-total{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;}
+  .dice-breakdown .bd-dc{color:var(--text-3);}
+  .dice-breakdown .bd-sep{color:var(--text-3);margin:0 6px;}
+
+  .dice-verdict{font-family:'Newsreader',serif;font-size:22px;font-weight:500;display:flex;align-items:center;gap:9px;
+    animation:reveal .4s var(--ease) .35s both;}
+  .dice-verdict svg{width:20px;height:20px;}
+  .dice-verdict.win{color:var(--good-2);}
+  .dice-verdict.lose{color:var(--wound);}
+
+  @media (prefers-reduced-motion:reduce){
+    .d20.tumble{animation:none;}
+    .d20 .face.flicker{animation:none;}
+    .dice-verdict{animation:none;}
+  }
+</style>
+
+<script>
+(function(){
+  const REDUCE = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+  function mount(){ return document.getElementById('dice-stage'); }
+
+  // payload = {roll, modifier, total, dc, success}
+  // opts    = {stat, gear}  (optional labels the card knew; endpoint doesn't return them)
+  window.renderDice = function(payload, opts){
+    const stage = mount();
+    if(!stage || !payload) return;
+    opts = opts || {};
+    const p = payload;
+
+    const faceClass = p.roll === 20 ? 'nat20' : (p.roll === 1 ? 'nat1' : '');
+    stage.innerHTML =
+      '<div class="d20 '+faceClass+(REDUCE?'':' tumble')+'">' +
+        '<svg data-lucide="dice-6"></svg>' +
+        '<span class="face'+(REDUCE?'':' flicker')+'">'+p.roll+'</span>' +
+      '</div>' +
+      '<div class="dice-breakdown"></div>';
+
+    if(window.lucide) lucide.createIcons();
+
+    // Build the breakdown after the die settles (or immediately if reduced).
+    const bd = stage.querySelector('.dice-breakdown');
+    const modStr = (p.modifier >= 0 ? '+' : '') + p.modifier;
+    const statGear = [];
+    if(opts.stat) statGear.push(opts.stat);
+    if(opts.gear) statGear.push('+'+opts.gear+' gear');
+    const modSuffix = statGear.length ? ' <span class="bd-dc">('+statGear.join(', ')+')</span>' : '';
+
+    let line = 'rolled <span class="bd-roll">'+p.roll+'</span>' +
+               '<span class="bd-sep">·</span>' +
+               '<span class="bd-mod">'+modStr+'</span>'+modSuffix +
+               '<span class="bd-sep">=</span>' +
+               '<span class="bd-total">'+p.total+'</span>';
+    if(p.dc !== null && p.dc !== undefined){
+      line += '<span class="bd-sep">vs</span><span class="bd-dc">DC '+p.dc+'</span>';
+    }
+
+    function showResult(){
+      bd.innerHTML = line;
+      if(p.success !== null && p.success !== undefined){
+        const v = document.createElement('div');
+        v.className = 'dice-verdict ' + (p.success ? 'win' : 'lose');
+        v.innerHTML = '<svg data-lucide="'+(p.success?'circle-check':'circle-x')+'"></svg>' +
+                      (p.success ? 'Success' : 'Failure');
+        stage.appendChild(v);
+        if(window.lucide) lucide.createIcons();
+      }
+      // Outcome known → let the loop continue the narrative (DEV-42).
+      document.dispatchEvent(new CustomEvent('dm:roll-done', { detail: p }));
+    }
+
+    if(REDUCE){ showResult(); }
+    else { setTimeout(showResult, 850); }
+  };
+
+  // Card layer (FE-06) emits dm:roll with {payload, stat, gear}.
+  document.addEventListener('dm:roll', function(e){
+    const d = e.detail || {};
+    window.renderDice(d.payload || d, { stat: d.stat, gear: d.gear });
+  });
+})();
+</script>
