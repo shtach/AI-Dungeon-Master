@@ -7,6 +7,7 @@
 """
 
 import logging
+import time
 
 from django.conf import settings
 from google import genai
@@ -22,6 +23,8 @@ logger = logging.getLogger("ai_dungeon_master.apps.ai")
 
 DEFAULT_TEMPERATURE = 0.8
 DEFAULT_MAX_TOKENS = 2048
+MAX_RETRIES = 3
+BASE_DELAY = 1.0
 
 
 def _is_rate_limit(exc) -> bool:
@@ -31,6 +34,13 @@ def _is_rate_limit(exc) -> bool:
         return True
     text = str(exc)
     return "429" in text or "RESOURCE_EXHAUSTED" in text
+
+def _is_retryable(exc) -> bool:
+    """True for transient errors worth retrying (429, timeout)."""
+    if _is_rate_limit(exc):
+        return True
+    text = str(exc).lower()
+    return "timeout" in text or "deadline" in text or "503" in text
 
 class GeminiProvider:
     """
@@ -59,39 +69,52 @@ class GeminiProvider:
         """
             Send prompt to Gemini and return response text.
 
-            Raises:
-                AIProviderError: On any API or network failure.
+            Retries on transient errors (429, timeout) with exponential backoff.
+            Raises AIProviderError on non-recoverable failures.
         """
 
         logger.debug("Gemini req. | model: %s | prompt length: %s", self._model, len(prompt))
 
-        try:
-            response = self._client.models.generate_content(
-                model=self._model,
-                contents=prompt,
-                config=genai.types.GenerateContentConfig(
-                    temperature=DEFAULT_TEMPERATURE,
-                    max_output_tokens=DEFAULT_MAX_TOKENS,
-                ),
-            )
+        last_exc = None
+        for attempt in range(MAX_RETRIES):
+            try:
+                response = self._client.models.generate_content(
+                    model=self._model,
+                    contents=prompt,
+                    config=genai.types.GenerateContentConfig(
+                        temperature=DEFAULT_TEMPERATURE,
+                        max_output_tokens=DEFAULT_MAX_TOKENS,
+                    ),
+                )
 
-        except (APIError, ClientError) as exc:
-            logger.error("Gemini API ERROR: %s", exc)
-            if _is_rate_limit(exc):
-                raise AIRateLimitError(f"Gemini rate limited (429): {exc}") from exc
-            raise AIProviderError(f"Gemini returned an error: {exc}") from exc
-        except Exception as exc:
-            logger.error("Unexpected error calling Gemini: %s", exc)
-            raise AIProviderError(f"Unexpected provider error: {exc}") from exc
+                result = response.text
 
-        result = response.text
+                if not result:
+                    raise AIProviderError(
+                        "Gemini returned an empty response. "
+                        "The prompt may have been blocked by safety filters."
+                    )
 
-        if not result:
-            raise AIProviderError(
-                "Gemini returned an empty response. "
-                "The prompt may have been blocked by safety filters."
-            )
+                logger.debug("Gemini response | response_len=%d", len(result))
+                return result
 
-        logger.debug("Gemini response | response_len=%d", len(result))
-        return result
+            except (APIError, ClientError) as exc:
+                last_exc = exc
+                logger.warning("Gemini API error (attempt %d/%d): %s", attempt + 1, MAX_RETRIES, exc)
+                if not _is_retryable(exc) or attempt == MAX_RETRIES - 1:
+                    if _is_rate_limit(exc):
+                        raise AIRateLimitError(f"Gemini rate limited (429): {exc}") from exc
+                    raise AIProviderError(f"Gemini returned an error: {exc}") from exc
+                delay = BASE_DELAY * (2 ** attempt)
+                time.sleep(delay)
+
+            except Exception as exc:
+                last_exc = exc
+                logger.warning("Unexpected error calling Gemini (attempt %d/%d): %s", attempt + 1, MAX_RETRIES, exc)
+                if not _is_retryable(exc) or attempt == MAX_RETRIES - 1:
+                    raise AIProviderError(f"Unexpected provider error: {exc}") from exc
+                delay = BASE_DELAY * (2 ** attempt)
+                time.sleep(delay)
+
+        raise AIProviderError(f"Gemini failed after {MAX_RETRIES} retries: {last_exc}")
 

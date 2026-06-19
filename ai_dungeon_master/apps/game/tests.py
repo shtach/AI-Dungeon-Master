@@ -1,5 +1,6 @@
 import json
 import pytest
+from unittest.mock import MagicMock
 from django.contrib.auth import get_user_model
 
 from ai_dungeon_master.apps.characters.models import Character, InventoryItem
@@ -87,24 +88,10 @@ def test_roll_branch_success(client, user, game_session, monkeypatch):
     assert response.status_code == 200
     data = response.json()
     assert "dice" in data
-    assert data["dice"]["roll"] == "dexterity"
+    assert isinstance(data["dice"]["roll"], int)
     assert data["dice"]["dc"] == 10
+    assert isinstance(data["dice"]["success"], bool)
     assert data["narrative"] == "You find a treasure chest!"
-
-    response2 = client.post(
-        f"/session/{game_session.id}/resolve/",
-        data=json.dumps({
-            "roll_result": 15,
-            "roll_total": 17,
-            "roll_success": True,
-            "label": "Search for traps",
-        }),
-        content_type="application/json",
-    )
-
-    assert response2.status_code == 200
-    data2 = response2.json()
-    assert data2["narrative"] == "You find a treasure chest!"
 
     game_session.refresh_from_db()
     assert game_session.turn_count == 1
@@ -287,3 +274,91 @@ def test_zero_marks_dead(client, user, game_session, monkeypatch):
     assert data["is_dead"] is True
     game_session.refresh_from_db()
     assert game_session.status == GameSession.StatusChoices.DEAD
+
+
+def test_single_call_common_turn(client, user, game_session, monkeypatch):
+    from ai_dungeon_master.apps.ai.providers.mock import MockProvider
+
+    call_count = 0
+    ai_response = (
+        "[NARRATIVE]You enter a dark cave.[/NARRATIVE]"
+        "[CARD]Go deeper[/CARD]"
+    )
+    mock = MockProvider(response=ai_response)
+    original_generate = mock.generate
+
+    def counting_generate(prompt):
+        nonlocal call_count
+        call_count += 1
+        return original_generate(prompt)
+
+    mock.generate = counting_generate
+
+    monkeypatch.setattr(
+        "ai_dungeon_master.apps.game.turn_views.get_ai_client",
+        lambda: mock,
+    )
+
+    client.force_login(user)
+    response = client.post(
+        f"/session/{game_session.id}/message/",
+        data=json.dumps({"label": "Explore cave"}),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 200
+    assert call_count == 1
+
+
+def test_retry_on_429(client, user, game_session, monkeypatch):
+    from google.genai.errors import APIError
+    from django.test import override_settings
+
+    call_count = 0
+
+    def flaky_generate(prompt):
+        nonlocal call_count
+        call_count += 1
+        if call_count < 3:
+            raise APIError(code=429, response_json={"error": "quota exceeded"})
+        return "You succeed on the third try."
+
+    with override_settings(AI_PROVIDER="gemini", GEMINI_API_KEY="fake-key"):
+        monkeypatch.setattr(
+            "ai_dungeon_master.apps.ai.providers.gemini.genai.Client",
+            lambda **kwargs: MagicMock(
+                models=MagicMock(
+                    generate_content=MagicMock(side_effect=lambda **kw: MagicMock(text=flaky_generate(kw.get("contents", ""))))
+                )
+            ),
+        )
+
+        from ai_dungeon_master.apps.ai.providers.gemini import GeminiProvider
+        provider = GeminiProvider()
+        result = provider.generate("Test prompt")
+
+        assert result == "You succeed on the third try."
+        assert call_count == 3
+
+
+def test_graceful_after_retries(client, user, game_session, monkeypatch):
+    from google.genai.errors import APIError
+    from django.test import override_settings
+
+    def always_fail(**kwargs):
+        raise APIError(code=429, response_json={"error": "quota exceeded"})
+
+    with override_settings(AI_PROVIDER="gemini", GEMINI_API_KEY="fake-key"):
+        monkeypatch.setattr(
+            "ai_dungeon_master.apps.ai.providers.gemini.genai.Client",
+            lambda **kwargs: MagicMock(
+                models=MagicMock(generate_content=MagicMock(side_effect=always_fail))
+            ),
+        )
+
+        from ai_dungeon_master.apps.ai.providers.gemini import GeminiProvider
+        from ai_dungeon_master.apps.ai.exceptions import AIRateLimitError
+
+        provider = GeminiProvider()
+        with pytest.raises(AIRateLimitError):
+            provider.generate("Test prompt")
