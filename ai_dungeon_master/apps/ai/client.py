@@ -21,6 +21,7 @@ def get_ai_client() -> BaseLLMClient:
 
         Provider is selected by the AI_PROVIDER env var (via settings):
             gemini  — GeminiProvider (default)
+            ollama  — OllamaProvider (local Ollama engine)
             mock    — MockProvider (tests / local dev without API key)
 
         Raises:
@@ -34,11 +35,15 @@ def get_ai_client() -> BaseLLMClient:
         from ai_dungeon_master.apps.ai.providers.gemini import GeminiProvider
         return GeminiProvider()
 
+    if provider == "ollama":
+        from ai_dungeon_master.apps.ai.providers.ollama import OllamaProvider
+        return OllamaProvider()
+
     if provider == "mock":
         from ai_dungeon_master.apps.ai.providers.mock import MockProvider
         return MockProvider()
 
     raise AIClientError(
         f"Unknown AI_PROVIDER='{provider}'. "
-        "Supported values: 'gemini', 'mock'."
+        "Supported values: 'gemini', 'ollama', 'mock'."
     )
