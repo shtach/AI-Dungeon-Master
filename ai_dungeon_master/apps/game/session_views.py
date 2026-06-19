@@ -51,6 +51,7 @@ class GameSessionView(LoginRequiredMixin, View):
         return render(request, "game/session.html", {
             "session": session,
             "messages": messages,
+            "cards": session.current_cards,
         })
 
 

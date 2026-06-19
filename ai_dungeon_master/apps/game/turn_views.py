@@ -184,8 +184,9 @@ class CardClickView(LoginRequiredMixin, View):
 
         _process_quests(session, parsed)
 
+        session.current_cards = parsed["cards"]
         session.turn_count += 1
-        session.save(update_fields=["turn_count"])
+        session.save(update_fields=["turn_count", "current_cards"])
 
         return JsonResponse(_build_response_payload(parsed, dice_result, hp_payload))
 
