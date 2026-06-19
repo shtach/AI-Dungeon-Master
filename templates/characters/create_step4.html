@@ -1,80 +1,86 @@
 {% extends "base.html" %}
 
-{% block title %} Create Character — Step 4 of 4 {% endblock %}
+{% block title %}New hero · Review{% endblock %}
+
+{% block extra_head %}
+<style>
+  .wizpage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:46px 24px;position:relative;}
+  .wizpage::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 35% at 50% 0,rgba(217,131,68,.09),transparent 60%);}
+  .wiz{width:min(620px,100%);position:relative;z-index:1;}
+  .prog{margin-bottom:32px;}
+  .prog .steps{display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-3);margin-bottom:10px;}
+  .prog .steps b{color:var(--ember-2);font-weight:600;}
+  .prog .track{height:3px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
+  .prog .track i{display:block;height:100%;background:linear-gradient(90deg,var(--ember),var(--ember-2));border-radius:99px;transition:width .5s var(--ease);}
+  .wiz h1{font-family:'Newsreader',serif;font-size:28px;font-weight:500;margin-bottom:6px;}
+  .wiz .lead{color:var(--text-3);font-size:14.5px;margin-bottom:26px;}
+  .sheet{background:linear-gradient(165deg,var(--surface),var(--bg-2));border:1px solid var(--line-2);border-radius:var(--radius);padding:22px;margin-bottom:24px;position:relative;overflow:hidden;}
+  .sheet .glow{position:absolute;top:-50px;right:-30px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(217,131,68,.15),transparent 70%);pointer-events:none;}
+  .sheet .top{display:flex;align-items:center;gap:15px;margin-bottom:20px;}
+  .sheet .av{width:56px;height:56px;border-radius:14px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--ember-2);flex:none;}
+  .sheet .av svg{width:28px;height:28px;}
+  .sheet h2{font-family:'Newsreader',serif;font-size:22px;font-weight:500;}
+  .sheet .cls{font-size:14px;color:var(--text-2);}
+  .vitals{display:flex;gap:10px;margin-bottom:20px;}
+  .vital{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;}
+  .vital .k{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);}
+  .vital .v{font-size:22px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums;}
+  .vital .v.hp{color:var(--good);} .vital .v.ac{color:var(--ember-2);}
+  .wnav{display:flex;justify-content:space-between;align-items:center;}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center py-12 px-4">
-  <div class="w-full max-w-2xl">
+<div class="wizpage">
+  <div class="wiz reveal">
 
-    <div class="mb-8">
-      <div class="flex justify-between text-xs text-dm-muted mb-2">
-        <span class="text-dm-accent font-semibold">Step 4 of 4</span>
-        <span>Review</span>
-      </div>
-      <div class="h-1 rounded-full bg-dm-surface">
-        <div class="h-1 rounded-full bg-dm-accent" style="width: 100%"></div>
-      </div>
+    <div class="prog">
+      <div class="steps"><span>1 · Name &amp; race</span><span>2 · Class</span><span>3 · Stats</span><b>4 · Review</b></div>
+      <div class="track"><i style="width:100%"></i></div>
     </div>
 
-    <h1 class="text-2xl font-bold text-dm-text mb-1">Review</h1>
-    <p class="text-dm-muted text-sm mb-8">Make sure that you choooosed all what you need.</p>
+    <h1 class="serif">Meet your hero</h1>
+    <p class="lead">Here's how {{ wizard_data.name }} will begin. Add a background, then step into the world.</p>
 
-    <div class="mb-8 p-6 rounded-xl bg-dm-surface border border-dm-muted/20">
-      <h2 class="text-dm-accent font-bold text-lg mb-1">{{ wizard_data.name }}</h2>
-      <p class="text-dm-muted text-sm mb-6">
-        {{ character.get_race_display }} · {{ character.get_character_class_display }}
-      </p>
+    <div class="sheet">
+      <div class="glow"></div>
+      <div class="top">
+        <div class="av">
+          <svg data-lucide="{% if character.character_class == 'WIZARD' %}wand-sparkles{% elif character.character_class == 'WARRIOR' %}swords{% elif character.character_class == 'ROGUE' %}venetian-mask{% elif character.character_class == 'CLERIC' %}cross{% else %}user-round{% endif %}"></svg>
+        </div>
+        <div>
+          <h2>{{ wizard_data.name }}</h2>
+          <div class="cls">{{ character.get_race_display }} {{ character.get_character_class_display }} · Level {{ character.level }}</div>
+        </div>
+      </div>
 
-      <div class="grid grid-cols-3 gap-3">
-        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
-          <span class="text-xs text-dm-muted uppercase tracking-widest">Strength</span>
-          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.strength }}</span>
-        </div>
-        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
-          <span class="text-xs text-dm-muted uppercase tracking-widest">Dexterity</span>
-          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.dexterity }}</span>
-        </div>
-        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
-          <span class="text-xs text-dm-muted uppercase tracking-widest">Constitution</span>
-          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.constitution }}</span>
-        </div>
-        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
-          <span class="text-xs text-dm-muted uppercase tracking-widest">Intelligence</span>
-          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.intelligence }}</span>
-        </div>
-        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
-          <span class="text-xs text-dm-muted uppercase tracking-widest">Wisdom</span>
-          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.wisdom }}</span>
-        </div>
-        <div class="flex flex-col gap-1 p-3 rounded-lg bg-dm-bg border border-dm-muted/10">
-          <span class="text-xs text-dm-muted uppercase tracking-widest">Charisma</span>
-          <span class="text-dm-text font-bold font-mono text-lg">{{ wizard_data.stats.charisma }}</span>
-        </div>
+      <div class="vitals">
+        <div class="vital"><div class="k">Health</div><div class="v hp">{{ character.max_hp }}</div></div>
+        <div class="vital"><div class="k">Armor</div><div class="v ac">{{ character.armor_class }}</div></div>
+        <div class="vital"><div class="k">Speed</div><div class="v">{{ character.speed }}</div></div>
+      </div>
+
+      <div class="statgrid">
+        <div class="stat {% if character.character_class == 'WARRIOR' %}key{% endif %}"><span class="k">Str</span><span class="v">{{ character.strength }}</span><span class="m">{{ character.str_mod|stringformat:"+d" }}</span></div>
+        <div class="stat {% if character.character_class == 'ROGUE' %}key{% endif %}"><span class="k">Dex</span><span class="v">{{ character.dexterity }}</span><span class="m">{{ character.dex_mod|stringformat:"+d" }}</span></div>
+        <div class="stat"><span class="k">Con</span><span class="v">{{ character.constitution }}</span><span class="m">{{ character.con_mod|stringformat:"+d" }}</span></div>
+        <div class="stat {% if character.character_class == 'WIZARD' %}key{% endif %}"><span class="k">Int</span><span class="v">{{ character.intelligence }}</span><span class="m">{{ character.int_mod|stringformat:"+d" }}</span></div>
+        <div class="stat {% if character.character_class == 'CLERIC' %}key{% endif %}"><span class="k">Wis</span><span class="v">{{ character.wisdom }}</span><span class="m">{{ character.wis_mod|stringformat:"+d" }}</span></div>
+        <div class="stat"><span class="k">Cha</span><span class="v">{{ character.charisma }}</span><span class="m">{{ character.cha_mod|stringformat:"+d" }}</span></div>
       </div>
     </div>
 
     <form method="post" action="{% url 'characters:create_step4' %}">
       {% csrf_token %}
 
-      <div class="mb-8">
-        <label class="block text-xs text-dm-muted uppercase tracking-widest mb-2">
-          Background Story
-          <span class="ml-2 normal-case text-dm-muted/60">(optional)</span>
-        </label>
-        <textarea name="background" rows="5"
-                  placeholder="Describe your character's past, motivations, and why they venture into the unknown…"
-                  class="w-full resize-none"></textarea>
+      <div class="field">
+        <label>Background <span style="text-transform:none;letter-spacing:0;color:var(--text-3);">(optional)</span></label>
+        <textarea class="input" name="background" rows="5" placeholder="Where does {{ wizard_data.name }} come from? What drives them into the dark?"></textarea>
       </div>
 
-      <div class="flex justify-between items-center">
-        <a href="{% url 'characters:create_step3' %}"
-           class="text-dm-muted hover:text-dm-text text-sm transition-colors duration-150">
-          ← Back
-        </a>
-        <button type="submit"
-                class="bg-dm-accent text-dm-bg hover:opacity-90 px-6 py-2 rounded-lg font-semibold transition-opacity duration-150 cursor-pointer">
-          Create Character
-        </button>
+      <div class="wnav">
+        <a class="btn btn-ghost" href="{% url 'characters:create_step3' %}"><svg data-lucide="arrow-left" class="sm"></svg> Back</a>
+        <button type="submit" class="btn btn-primary">Create hero <svg data-lucide="check" class="sm"></svg></button>
       </div>
     </form>
 

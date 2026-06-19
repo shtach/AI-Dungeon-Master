@@ -1,10 +1,42 @@
 {% extends "base.html" %}
 
-{% block title %}Create Character — Step 3 of 4{% endblock %}
+{% block title %}New hero · Stats{% endblock %}
+
+{% block extra_head %}
+<style>
+  .wizpage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:46px 24px;position:relative;}
+  .wizpage::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 35% at 50% 0,rgba(217,131,68,.09),transparent 60%);}
+  .wiz{width:min(620px,100%);position:relative;z-index:1;}
+  .prog{margin-bottom:32px;}
+  .prog .steps{display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-3);margin-bottom:10px;}
+  .prog .steps b{color:var(--ember-2);font-weight:600;}
+  .prog .track{height:3px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
+  .prog .track i{display:block;height:100%;background:linear-gradient(90deg,var(--ember),var(--ember-2));border-radius:99px;transition:width .5s var(--ease);}
+  .wiz h1{font-family:'Newsreader',serif;font-size:28px;font-weight:500;margin-bottom:6px;}
+  .wiz .lead{color:var(--text-3);font-size:14.5px;margin-bottom:24px;}
+  .errbox{margin-bottom:22px;display:flex;align-items:center;gap:9px;font-size:13px;color:var(--wound);background:rgba(192,106,58,.1);border:1px solid rgba(192,106,58,.3);border-radius:10px;padding:11px 13px;}
+  .errbox svg{width:15px;height:15px;flex:none;}
+  .pool{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:22px;}
+  .pool .ph{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3);margin-bottom:10px;}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;}
+  .chip{width:42px;height:42px;border-radius:10px;background:var(--bg);border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;font-variant-numeric:tabular-nums;}
+  .pool .done{color:var(--good-2);font-size:13.5px;display:flex;align-items:center;gap:7px;margin-top:10px;}
+  .pool .done svg{width:15px;height:15px;}
+  .rows{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:28px;}
+  .srow{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px;display:flex;align-items:center;gap:12px;transition:border-color .15s;}
+  .srow.filled{border-color:var(--line-2);}
+  .srow .lbl{font-size:13px;color:var(--text-2);width:96px;flex:none;}
+  .srow .lbl small{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);}
+  .srow select{flex:1;background:var(--bg);border:1px solid var(--line-2);border-radius:8px;color:var(--text);font:inherit;font-size:15px;padding:8px 10px;cursor:pointer;width:auto;}
+  .srow select:focus{outline:none;border-color:var(--ember);}
+  .srow .mod{width:38px;text-align:center;font-size:13px;font-weight:600;color:var(--ember-2);flex:none;font-variant-numeric:tabular-nums;}
+  .wnav{display:flex;justify-content:space-between;align-items:center;}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center py-12 px-4">
-  <div class="w-full max-w-2xl"
+<div class="wizpage">
+  <div class="wiz reveal"
     x-data="{
       pool: ['15', '14', '13', '12', '10', '8'],
       assigned: {
@@ -21,6 +53,11 @@
           .map(([, v]) => v);
         return this.pool.filter(v => !used.includes(v));
       },
+      modifier(v) {
+        if (v === '' || v === null) return '';
+        const m = Math.floor((parseInt(v) - 10) / 2);
+        return (m >= 0 ? '+' : '') + m;
+      },
       get unassigned() {
         const used = Object.values(this.assigned).filter(v => v !== '');
         return this.pool.filter(v => !used.includes(v));
@@ -30,76 +67,54 @@
       }
     }">
 
-    <!-- Step progress indicator -->
-    <div class="mb-8">
-      <div class="flex justify-between text-xs text-dm-muted mb-2">
-        <span class="text-dm-accent font-semibold">Step 3 of 4</span>
-        <span>Characteristics</span>
-      </div>
-      <div class="h-1 rounded-full bg-dm-surface">
-        <div class="h-1 rounded-full bg-dm-accent" style="width: 75%"></div>
-      </div>
+    <div class="prog">
+      <div class="steps"><span>1 · Name &amp; race</span><span>2 · Class</span><b>3 · Stats</b><span>4 · Review</span></div>
+      <div class="track"><i style="width:75%"></i></div>
     </div>
 
-    <h1 class="text-2xl font-bold text-dm-text mb-1">Choose your characteristics</h1>
-    <p class="text-dm-muted text-sm mb-8">This values defines how story to be continues.</p>
+    <h1 class="serif">Assign your gifts</h1>
+    <p class="lead">Spend the standard array across your six abilities. Each value is used once.</p>
 
-    <!-- Server-side error -->
     {% if error %}
-    <div class="mb-6 p-4 rounded-xl border border-red-500/40 bg-red-500/10 text-red-400 text-sm">
-      {{ error }}
-    </div>
+    <div class="errbox"><svg data-lucide="circle-alert"></svg><span>{{ error }}</span></div>
     {% endif %}
 
-    <!-- Remaining pool indicator -->
-    <div class="mb-6 p-4 rounded-xl bg-dm-surface border border-dm-muted/20">
-      <p class="text-xs text-dm-muted uppercase tracking-widest mb-2">Unassigned values</p>
-      <div class="flex gap-2 flex-wrap">
-        <template x-if="unassigned.length === 0">
-          <span class="text-dm-accent text-sm font-semibold">All values assigned ✓</span>
-        </template>
+    <div class="pool">
+      <div class="ph">Remaining values</div>
+      <div class="chips">
         <template x-for="val in unassigned" :key="val">
-          <span class="px-3 py-1 rounded-lg bg-dm-bg border border-dm-muted/30 text-dm-text text-sm font-mono font-semibold" x-text="val"></span>
+          <span class="chip" x-text="val"></span>
         </template>
+        <span x-show="unassigned.length === 0" class="chip" style="width:auto;padding:0 12px;color:var(--good-2);border-color:var(--good);" >All set</span>
       </div>
+      <div class="done" x-show="allAssigned" x-cloak><svg data-lucide="check"></svg> All values assigned</div>
     </div>
 
     <form method="post" action="{% url 'characters:create_step3' %}">
       {% csrf_token %}
 
-      <!-- Stat dropdowns -->
-      <div class="grid grid-cols-2 gap-4 mb-8">
-
+      <div class="rows">
         {% for stat in stats_list %}
-        <div class="flex flex-col gap-1">
-          <label class="text-xs text-dm-muted uppercase tracking-widest">{{ stat|title }}</label>
+        <div class="srow" :class="assigned.{{ stat }} !== '' && 'filled'">
+          <div class="lbl">{{ stat|title }}<small>{{ stat|slice:":3"|upper }}</small></div>
           <select name="{{ stat }}" x-model="assigned.{{ stat }}">
-            <option value="">— select —</option>
+            <option value="">—</option>
             <template x-for="val in availableFor('{{ stat }}')" :key="val">
               <option :value="val" x-text="val"></option>
             </template>
           </select>
+          <div class="mod" x-text="modifier(assigned.{{ stat }})"></div>
         </div>
         {% endfor %}
-
       </div>
 
-      <div class="flex justify-between items-center">
-        <a href="{% url 'characters:create_step2' %}"
-           class="text-dm-muted hover:text-dm-text text-sm transition-colors duration-150">
-          ← Back
-        </a>
-        <button type="submit"
-                :disabled="!allAssigned"
-                :class="allAssigned
-                  ? 'bg-dm-accent text-dm-bg hover:opacity-90 cursor-pointer'
-                  : 'bg-dm-surface text-dm-muted cursor-not-allowed'"
-                class="px-6 py-2 rounded-lg font-semibold transition-all duration-150">
-          Next →
-        </button>
+      <div class="wnav">
+        <a class="btn btn-ghost" href="{% url 'characters:create_step2' %}"><svg data-lucide="arrow-left" class="sm"></svg> Back</a>
+        <button type="submit" class="btn btn-primary" :disabled="!allAssigned">Review your hero <svg data-lucide="arrow-right" class="sm"></svg></button>
       </div>
     </form>
 
   </div>
 </div>
+<style>[x-cloak]{display:none!important;}</style>
 {% endblock %}
