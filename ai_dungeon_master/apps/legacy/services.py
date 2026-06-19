@@ -72,6 +72,10 @@ def _snapshot_relics(session: GameSession) -> None:
 
 @transaction.atomic
 def end_session(session: GameSession, verdict: str) -> SessionSummary:
+    existing = SessionSummary.objects.filter(session=session).first()
+    if existing:
+        return existing
+
     profile, _ = PlayerProfile.objects.get_or_create(user=session.user)
 
     if verdict == SessionSummary.VerdictChoices.DIED:
