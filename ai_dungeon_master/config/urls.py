@@ -9,6 +9,7 @@ urlpatterns = [
     path("", include("ai_dungeon_master.apps.game.urls")),
     path("characters/", include("ai_dungeon_master.apps.characters.urls")),
     path("legacy/", include("ai_dungeon_master.apps.legacy.urls")),
+    path("ai/", include("ai_dungeon_master.apps.ai.urls")),
 ]
 
 if settings.DEBUG:
