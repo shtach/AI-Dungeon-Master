@@ -40,6 +40,15 @@
   <div style="font-size:13px;color:var(--text-2);margin-bottom:auto;">{{ session.world.name }}</div>
 
   <div style="margin-top:18px;display:flex;flex-direction:column;gap:6px;">
+    <a class="navlink" href="{% url 'game:quest_log' session.id %}" style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--radius-sm);font-size:13px;color:var(--text-2);text-decoration:none;transition:background .12s;">
+      <svg data-lucide="scroll-text" style="width:16px;height:16px;"></svg> Quests
+    </a>
+    <a class="navlink" href="{% url 'game:codex' session.id %}" style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--radius-sm);font-size:13px;color:var(--text-2);text-decoration:none;transition:background .12s;">
+      <svg data-lucide="book-open" style="width:16px;height:16px;"></svg> Codex
+    </a>
+    <a class="navlink" href="{% url 'accounts:settings' %}" style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--radius-sm);font-size:13px;color:var(--text-2);text-decoration:none;transition:background .12s;">
+      <svg data-lucide="settings" style="width:16px;height:16px;"></svg> Settings
+    </a>
     <a class="navlink" href="{% url 'game:dashboard' %}" style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--radius-sm);font-size:13px;color:var(--text-2);text-decoration:none;transition:background .12s;">
       <svg data-lucide="layout-grid" style="width:16px;height:16px;"></svg> Characters
     </a>
