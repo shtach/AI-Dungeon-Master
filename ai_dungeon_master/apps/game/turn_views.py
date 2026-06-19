@@ -110,6 +110,9 @@ class CardClickView(LoginRequiredMixin, View):
             user=request.user,
         )
 
+        if session.status != GameSession.StatusChoices.ACTIVE:
+            return _error_payload("This session has ended and cannot accept further turns.", 400)
+
         try:
             body = json.loads(request.body)
         except json.JSONDecodeError:
@@ -183,6 +186,9 @@ class ResolveView(LoginRequiredMixin, View):
             id=session_id,
             user=request.user,
         )
+
+        if session.status != GameSession.StatusChoices.ACTIVE:
+            return _error_payload("This session has ended and cannot accept further turns.", 400)
 
         try:
             body = json.loads(request.body)
