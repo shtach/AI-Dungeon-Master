@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import F
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views import View
@@ -52,5 +53,9 @@ class QuestCompleteView(LoginRequiredMixin, View):
 
         quest.status = Quest.Status.COMPLETED
         quest.save(update_fields=["status"])
+
+        GameSession.objects.filter(id=session.id).update(
+            quests_completed=F("quests_completed") + 1
+        )
 
         return JsonResponse({"completed": True, "quest_id": quest.id})
