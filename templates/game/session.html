@@ -183,8 +183,12 @@
 
   // Every resolved turn carries the next narration paragraph.
   document.addEventListener('dm:turn', function(e){
-    const d = e.detail || {};
-    if(d.narrative) appendNarration(d.narrative);
+      const d = e.detail || {};
+      if(d.narrative) appendNarration(d.narrative);
+      if(d.combat_start) document.dispatchEvent(new CustomEvent('dm:combat-start', { detail: d.combat_start }));
+      if(d.enemy_hp !== null && d.enemy_hp !== undefined) document.dispatchEvent(new CustomEvent('dm:enemy-hp', { detail: { enemy_hp: d.enemy_hp } }));
+      if(d.combat_end) document.dispatchEvent(new CustomEvent('dm:combat-end', { detail: d.combat_end }));
+      if(d.loot) document.dispatchEvent(new CustomEvent('dm:loot', { detail: d.loot }));
   });
   document.addEventListener('dm:choice', e => echoChoice((e.detail||{}).label));
 
@@ -192,9 +196,9 @@
   // kick the opening turn so the DM writes the scenario intro + first choices.
   (function bootstrap(){
     if(!story || !cardsMount) return;
-    const hasNarration = story.querySelector('.dm-line');
     const hasCards = cardsMount.querySelector('.ga-ch');
-    if(hasNarration || hasCards) return;  // already underway
+    if(hasCards) return;                       // karty już są (powrót do sesji)
+    if({{ session.turn_count }} > 0) return;
 
     const loading = document.createElement('div');
     loading.className = 'story-loading';

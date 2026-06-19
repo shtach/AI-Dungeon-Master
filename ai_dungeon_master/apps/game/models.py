@@ -35,6 +35,7 @@ class GameSession(models.Model):
         blank=True, help_text="Summary of old events for AI context"
     )
     pending_loot = models.JSONField(null=True, blank=True, help_text="Pending loot from AI")
+    current_cards = models.JSONField(default=list, blank=True, help_text="Cards from the last AI turn (for resuming a session)")
 
     kills = models.IntegerField(default=0)
     dice_rolled = models.IntegerField(default=0)

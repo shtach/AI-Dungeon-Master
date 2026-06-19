@@ -99,6 +99,11 @@
     if(window.lucide) lucide.createIcons();
   }
 
+  // wewnątrz istniejącego IIFE, zaraz po definicji renderCards()
+  document.addEventListener('dm:turn', function(e){
+    renderCards((e.detail || {}).cards || []);
+  });
+
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(m){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
