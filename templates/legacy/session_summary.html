@@ -1,0 +1,10 @@
+{% comment %}
+  Run summary screen (FE-12). Placeholder — replaced by the summary ticket.
+  Shown in the scene slot when the session is DEAD or COMPLETED.
+{% endcomment %}
+<div class="summary-stub">
+  <span class="eyebrow"><svg data-lucide="flame"></svg> {{ session.get_status_display }}</span>
+  <h2 class="serif">{{ session.character.name }}'s tale ends here</h2>
+  <p>This run is over. A full summary screen arrives with FE-12.</p>
+  <a class="btn btn-primary" href="{% url 'game:dashboard' %}">Back to your heroes <svg data-lucide="arrow-right" class="sm"></svg></a>
+</div>

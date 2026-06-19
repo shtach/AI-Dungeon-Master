@@ -1,0 +1,83 @@
+{% comment %}
+  Character-sheet sidebar (DEV-54). Reads the character off the session.
+  Effective/buffed numbers come from the stat layer when present; until the
+  stat layer (DEV-34) exposes them, the raw model stats render and the .key
+  highlight stays a hook. Nav links to Inventory/Quests/Codex are placeholders
+  until those pages exist (FE-09/10/11).
+{% endcomment %}
+{% with c=session.character %}
+<aside class="side">
+
+  <div class="who">
+    <div class="av"><svg data-lucide="{% if c.character_class == 'WIZARD' %}wand-sparkles{% elif c.character_class == 'WARRIOR' %}swords{% elif c.character_class == 'ROGUE' %}venetian-mask{% elif c.character_class == 'CLERIC' %}cross{% else %}user-round{% endif %}"></svg></div>
+    <div>
+      <div class="name serif">{{ c.name }}</div>
+      <div class="meta">{{ c.get_race_display }} {{ c.get_character_class_display }} · Lv {{ c.level }}</div>
+    </div>
+  </div>
+
+  {# HP — frozen swap/mount target #}
+  <div id="hp-bar">
+    {% include "game/_hp_bar.html" with current=c.current_hp max=c.max_hp show_label=True %}
+  </div>
+
+  {# AC + Speed #}
+  <div class="sheet-line">
+    <div class="sl"><span>Armor</span><b>{{ c.armor_class }}</b></div>
+    <div class="sl"><span>Speed</span><b>{{ c.speed }} ft</b></div>
+  </div>
+
+  {# Six ability scores with signed modifiers #}
+  <div>
+    <div class="sec-lbl">Abilities</div>
+    <div class="statgrid">
+      <div class="stat {% if c.character_class == 'WARRIOR' %}key{% endif %}"><span class="k">Str</span><span class="v">{{ c.strength }}</span><span class="m">{{ c.str_mod|stringformat:"+d" }}</span></div>
+      <div class="stat {% if c.character_class == 'ROGUE' %}key{% endif %}"><span class="k">Dex</span><span class="v">{{ c.dexterity }}</span><span class="m">{{ c.dex_mod|stringformat:"+d" }}</span></div>
+      <div class="stat"><span class="k">Con</span><span class="v">{{ c.constitution }}</span><span class="m">{{ c.con_mod|stringformat:"+d" }}</span></div>
+      <div class="stat {% if c.character_class == 'WIZARD' %}key{% endif %}"><span class="k">Int</span><span class="v">{{ c.intelligence }}</span><span class="m">{{ c.int_mod|stringformat:"+d" }}</span></div>
+      <div class="stat {% if c.character_class == 'CLERIC' %}key{% endif %}"><span class="k">Wis</span><span class="v">{{ c.wisdom }}</span><span class="m">{{ c.wis_mod|stringformat:"+d" }}</span></div>
+      <div class="stat"><span class="k">Cha</span><span class="v">{{ c.charisma }}</span><span class="m">{{ c.cha_mod|stringformat:"+d" }}</span></div>
+    </div>
+  </div>
+
+  {# Equipped items #}
+  {% with equipped=c.inventory.all %}
+  <div>
+    <div class="sec-lbl">Equipped</div>
+    <div class="kit">
+      {% for item in equipped %}{% if item.equipped %}
+      <div class="kit-row">
+        <svg data-lucide="{% if item.slot == 'WEAPON' %}sword{% elif item.slot == 'ARMOR' %}shield{% else %}gem{% endif %}" class="sm"></svg>
+        <span class="kn">{{ item.name }}</span>
+        {% if item.damage_die %}<span class="kt">{{ item.damage_die }}</span>{% elif item.ac_bonus %}<span class="kt">+{{ item.ac_bonus }} AC</span>{% endif %}
+      </div>
+      {% endif %}{% endfor %}
+    </div>
+  </div>
+  {% endwith %}
+
+  {# Active quests mini-list — mount point #quests #}
+  <div id="quests">
+    {% if session.quests.all %}
+    <div class="sec-lbl">Quests</div>
+    <div class="qmini">
+      {% for q in session.quests.all %}
+      <div class="qmini-row"><svg data-lucide="scroll-text" class="sm"></svg><span>{{ q.title }}</span></div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  {# Navigation #}
+  <div class="navlinks">
+    <div class="sec-lbl" style="margin:4px 0 2px;">Adventure</div>
+    <a class="navlink active"><svg data-lucide="book-open"></svg> Story</a>
+    <a class="navlink is-soon" title="Coming soon"><svg data-lucide="backpack"></svg> Inventory</a>
+    <a class="navlink is-soon" title="Coming soon"><svg data-lucide="scroll-text"></svg> Quests</a>
+    <a class="navlink is-soon" title="Coming soon"><svg data-lucide="library"></svg> Codex</a>
+  </div>
+
+  <a class="home" href="{% url 'game:dashboard' %}"><svg data-lucide="arrow-left" style="width:15px;height:15px;"></svg> Back to your heroes</a>
+
+</aside>
+{% endwith %}
