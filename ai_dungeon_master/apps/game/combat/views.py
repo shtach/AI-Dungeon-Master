@@ -79,10 +79,9 @@ class EnemyTurnView(LoginRequiredMixin, View):
         result = enemy_turn(enemy, session.character)
 
         player_dead = session.character.current_hp <= 0
-        if player_dead and not hasattr(session, "legacy_summary"):
-            from ai_dungeon_master.apps.legacy.models import SessionSummary
-            from ai_dungeon_master.apps.legacy.services import end_session
-            end_session(session, SessionSummary.VerdictChoices.DIED)
+        if player_dead:
+            session.status = GameSession.StatusChoices.DEAD
+            session.save(update_fields=["status"])
 
         return JsonResponse({**result, "player_dead": player_dead})
 
