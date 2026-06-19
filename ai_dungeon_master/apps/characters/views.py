@@ -207,8 +207,47 @@ class CharacterCreateStep4View(LoginRequiredMixin, View):
                 character=character, name="Scale Mail", item_type="Armor", slot="ARMOR", equipped=True, ac_bonus=2
             )
 
+        relic_id = request.session.pop("chosen_relic_id", None)
+        if relic_id:
+            from ai_dungeon_master.apps.legacy.models import Relic
+
+            relic = Relic.objects.filter(id=relic_id, profile__user=request.user).first()
+            if relic:
+                InventoryItem.objects.create(
+                    character=character, name=relic.name, item_type="Relic",
+                    slot=relic.slot, equipped=True,
+                    damage_die=relic.damage_die, attack_stat=relic.attack_stat,
+                    hit_bonus=relic.hit_bonus, ac_bonus=relic.ac_bonus,
+                    stat_bonuses=relic.stat_bonuses,
+                )
+
+        from ai_dungeon_master.apps.legacy.models import OwnedPerk, PlayerProfile
+        profile, _ = PlayerProfile.objects.get_or_create(user=request.user)
+        for op in OwnedPerk.objects.filter(profile=profile).select_related("perk"):
+            _apply_perk_to_character(character, op.perk)
+
         if WIZARD_SESSION_KEY in request.session:
             del request.session[WIZARD_SESSION_KEY]
 
         url = reverse("game:create_session") + f"?character_id={character.id}"
         return redirect(url)
+
+
+def _apply_perk_to_character(character, perk):
+    from .models import InventoryItem
+
+    effect = perk.effect
+    if "max_hp" in effect:
+        character.max_hp += effect["max_hp"]
+        character.current_hp += effect["max_hp"]
+        character.save(update_fields=["max_hp", "current_hp"])
+    if "stat" in effect and "bonus" in effect:
+        stat_name = effect["stat"]
+        if hasattr(character, stat_name):
+            setattr(character, stat_name, getattr(character, stat_name) + effect["bonus"])
+            character.save(update_fields=[stat_name])
+    if "ac_bonus" in effect:
+        InventoryItem.objects.create(
+            character=character, name=perk.name, item_type="Perk",
+            slot="TRINKET", equipped=True, ac_bonus=effect["ac_bonus"],
+        )
