@@ -133,7 +133,7 @@ class CardClickView(LoginRequiredMixin, View):
 
         try:
             ai_client = get_ai_client()
-            full_prompt = build_prompt(session, label)
+            full_prompt = build_prompt(session, label, ai_client)
             ai_response_text = ai_client.generate(full_prompt)
         except AIProviderError as e:
             logger.warning("AI provider error: %s", e)
@@ -216,7 +216,7 @@ class ResolveView(LoginRequiredMixin, View):
 
         try:
             ai_client = get_ai_client()
-            full_prompt = build_prompt(session, resolve_message)
+            full_prompt = build_prompt(session, resolve_message, ai_client)
             ai_response_text = ai_client.generate(full_prompt)
         except AIProviderError as e:
             logger.warning("AI provider error on resolve: %s", e)
