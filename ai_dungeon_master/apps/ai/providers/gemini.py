@@ -12,12 +12,25 @@ from django.conf import settings
 from google import genai
 from google.genai.errors import APIError, ClientError
 
-from ai_dungeon_master.apps.ai.exceptions import AIClientError, AIProviderError
+from ai_dungeon_master.apps.ai.exceptions import (
+    AIClientError,
+    AIProviderError,
+    AIRateLimitError,
+)
 
 logger = logging.getLogger("ai_dungeon_master.apps.ai")
 
 DEFAULT_TEMPERATURE = 0.8
 DEFAULT_MAX_TOKENS = 2048
+
+
+def _is_rate_limit(exc) -> bool:
+    """True when the provider error represents an HTTP 429 / quota exhaustion."""
+
+    if getattr(exc, "code", None) == 429:
+        return True
+    text = str(exc)
+    return "429" in text or "RESOURCE_EXHAUSTED" in text
 
 class GeminiProvider:
     """
@@ -62,8 +75,10 @@ class GeminiProvider:
                 ),
             )
 
-        except(APIError, ClientError) as exc:
+        except (APIError, ClientError) as exc:
             logger.error("Gemini API ERROR: %s", exc)
+            if _is_rate_limit(exc):
+                raise AIRateLimitError(f"Gemini rate limited (429): {exc}") from exc
             raise AIProviderError(f"Gemini returned an error: {exc}") from exc
         except Exception as exc:
             logger.error("Unexpected error calling Gemini: %s", exc)
