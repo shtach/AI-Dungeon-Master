@@ -1,47 +1,57 @@
 {% extends "base.html" %}
 
-{% block title %}New Adventure — AI Dungeon Master{% endblock %}
+{% block title %}New adventure — AI Dungeon Master{% endblock %}
+
+{% block extra_head %}
+<style>
+  .advpage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:46px 24px;position:relative;}
+  .advpage::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 35% at 50% 0,rgba(217,131,68,.09),transparent 60%);}
+  .adv{width:min(680px,100%);position:relative;z-index:1;}
+  .back{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--text-3);margin-bottom:22px;}
+  .back:hover{color:var(--text);} .back svg{width:15px;height:15px;}
+  .adv h1{font-family:'Newsreader',serif;font-size:28px;font-weight:500;margin-bottom:6px;}
+  .adv .lead{color:var(--text-3);font-size:14.5px;margin-bottom:26px;}
+  .herochip{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:13px 16px;margin-bottom:30px;}
+  .herochip .av{width:42px;height:42px;border-radius:11px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--ember-2);flex:none;}
+  .herochip .n{font-weight:600;} .herochip .c{font-size:13px;color:var(--text-2);}
+  .sec{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3);margin-bottom:13px;}
+  .worlds{display:flex;flex-direction:column;gap:11px;margin-bottom:30px;}
+  .world{padding:0;border:1px solid var(--line);border-radius:var(--radius);cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden;width:100%;text-align:left;font:inherit;color:inherit;background:var(--surface);}
+  .world .wbg{padding:17px 19px;position:relative;}
+  .world.w0 .wbg{background:radial-gradient(ellipse at 0 0,rgba(217,131,68,.16),transparent 60%);}
+  .world.w1 .wbg{background:radial-gradient(ellipse at 0 0,rgba(154,123,196,.16),transparent 60%);}
+  .world.w2 .wbg{background:radial-gradient(ellipse at 0 0,rgba(91,155,143,.16),transparent 60%);}
+  .world:hover{border-color:var(--line-2);} .world.sel{border-color:var(--ember);}
+  .world .wn{font-family:'Newsreader',serif;font-size:18px;font-weight:500;margin-bottom:4px;}
+  .world .wd{font-size:13.5px;color:var(--text-3);line-height:1.5;max-width:90%;}
+  .world .pick{position:absolute;top:17px;right:18px;width:20px;height:20px;border-radius:99px;border:2px solid var(--line-2);transition:all .15s;}
+  .world.sel .pick{border-color:var(--ember);background:var(--ember);}
+  .scens{display:flex;flex-direction:column;gap:10px;}
+  .scen{padding:15px 17px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);cursor:pointer;transition:border-color .15s,background .15s,transform .12s;display:flex;align-items:center;gap:13px;width:100%;text-align:left;font:inherit;color:inherit;}
+  .scen:hover{border-color:var(--line-2);transform:translateX(2px);} .scen.sel{border-color:var(--ember);background:var(--ember-soft);}
+  .scen .ic{width:38px;height:38px;border-radius:10px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--text-2);flex:none;}
+  .scen.sel .ic{color:var(--ember-2);} .scen .ic svg{width:18px;height:18px;}
+  .scen .st{font-weight:500;font-size:14.5px;} .scen .ss{font-size:12.5px;color:var(--text-3);margin-top:1px;}
+  .scenblock{margin-bottom:30px;}
+  .wnav{display:flex;justify-content:flex-end;}
+  [x-cloak]{display:none!important;}
+</style>
+{% endblock %}
 
 {% block content %}
-{{ worlds_json|json_script:"worlds-data" }}
+<div class="advpage">
+  <div class="adv reveal"
+       x-data="{ selectedWorld: '', selectedScenario: '' }">
 
-<div class="min-h-screen flex items-center justify-center py-12 px-4">
-  <div class="w-full max-w-xl"
-       x-data="{
-         worlds: JSON.parse(document.getElementById('worlds-data').textContent),
-         selectedWorld: '',
-         selectedScenario: '',
-         scenarios: [],
-         selectWorld(id) {
-           this.selectedWorld = id;
-           this.selectedScenario = '';
-           const w = this.worlds.find(w => String(w.id) === id);
-           this.scenarios = w ? w.scenarios : [];
-         },
-         get canSubmit() {
-           return this.selectedWorld && this.selectedScenario;
-         }
-       }">
+    <a class="back" href="{% url 'game:dashboard' %}"><svg data-lucide="arrow-left"></svg> Back to your heroes</a>
+    <h1 class="serif">A new adventure</h1>
+    <p class="lead">Choose a world and an opening scenario for your hero.</p>
 
-    <div class="mb-8">
-      <a href="{% url 'game:dashboard' %}"
-         class="text-dm-muted text-sm hover:text-dm-text transition-colors">← Dashboard</a>
-      <h1 class="text-2xl font-bold text-dm-text mt-4 mb-1">New Adventure</h1>
-      <p class="text-dm-muted text-sm">Choose a world and scenario for your character.</p>
-    </div>
-
-    <!-- Character (read-only) -->
-    <div class="bg-dm-surface border border-dm-muted/20 rounded-xl p-4 mb-8">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-dm-bg flex items-center justify-center text-lg">⚔</div>
-        <div>
-          <p class="font-bold text-dm-accent text-sm">{{ character.name }}</p>
-          <p class="text-dm-muted text-xs">
-            {{ character.get_race_display }} ·
-            {{ character.get_character_class_display }} ·
-            Level {{ character.level }}
-          </p>
-        </div>
+    <div class="herochip">
+      <div class="av"><svg data-lucide="user-round"></svg></div>
+      <div>
+        <div class="n">{{ character.name }}</div>
+        <div class="c">{{ character.get_race_display }} {{ character.get_character_class_display }} · Level {{ character.level }}</div>
       </div>
     </div>
 
@@ -51,47 +61,46 @@
       <input type="hidden" name="world_id" :value="selectedWorld">
       <input type="hidden" name="scenario_id" :value="selectedScenario">
 
-      <!-- World selection -->
-      <div class="mb-8">
-        <label class="block text-xs text-dm-muted uppercase tracking-widest mb-3">World</label>
-        <div class="flex flex-col gap-2">
-          {% for world in worlds %}
-          <button type="button"
-                  @click="selectWorld('{{ world.id }}')"
-                  :class="selectedWorld === '{{ world.id }}' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
-                  class="flex flex-col gap-1 p-4 rounded-xl border bg-dm-surface transition-colors text-left w-full">
-            <span class="font-semibold text-dm-text text-sm">{{ world.name }}</span>
-            <span class="text-xs text-dm-muted leading-relaxed">
-              {{ world.description|truncatechars:100 }}
+      <div class="sec">World</div>
+      <div class="worlds">
+        {% for world in worlds %}
+        <button type="button" class="world {% cycle 'w0' 'w1' 'w2' %}"
+                :class="selectedWorld === '{{ world.id }}' && 'sel'"
+                @click="selectedWorld = '{{ world.id }}'; selectedScenario = ''">
+          <span class="wbg">
+            <span class="pick"></span>
+            <span class="wn serif">{{ world.name }}</span>
+            <span class="wd">{{ world.description|truncatechars:130 }}</span>
+          </span>
+        </button>
+        {% endfor %}
+      </div>
+
+      <div class="scenblock" x-show="selectedWorld" x-cloak>
+        <div class="sec">Opening scenario</div>
+        {% for world in worlds %}
+        <div class="scens" x-show="selectedWorld === '{{ world.id }}'">
+          {% for scenario in world.scenarios.all %}
+          <button type="button" class="scen"
+                  :class="selectedScenario === '{{ scenario.id }}' && 'sel'"
+                  @click="selectedScenario = '{{ scenario.id }}'">
+            <span class="ic"><svg data-lucide="scroll-text"></svg></span>
+            <span>
+              <span class="st">{{ scenario.title }}</span>
+              <span class="ss">{{ scenario.intro_text|truncatechars:90 }}</span>
             </span>
           </button>
           {% endfor %}
         </div>
+        {% endfor %}
       </div>
 
-      <!-- Scenario selection -->
-      <div class="mb-8" x-show="selectedWorld">
-        <label class="block text-xs text-dm-muted uppercase tracking-widest mb-3">Scenario</label>
-        <div class="flex flex-col gap-2">
-          <template x-for="scenario in scenarios" :key="scenario.id">
-            <button type="button"
-                    @click="selectedScenario = String(scenario.id)"
-                    :class="selectedScenario === String(scenario.id) ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
-                    class="p-4 rounded-xl border bg-dm-surface transition-colors text-left w-full">
-              <span class="font-semibold text-dm-text text-sm" x-text="scenario.title"></span>
-            </button>
-          </template>
-        </div>
+      <div class="wnav">
+        <button type="submit" class="btn btn-primary"
+                :disabled="!(selectedWorld && selectedScenario)">
+          Begin your adventure <svg data-lucide="arrow-right" class="sm"></svg>
+        </button>
       </div>
-
-      <button type="submit"
-              :disabled="!canSubmit"
-              :class="canSubmit
-                ? 'bg-dm-accent text-dm-bg hover:opacity-90 cursor-pointer'
-                : 'bg-dm-surface text-dm-muted cursor-not-allowed'"
-              class="w-full py-3 rounded-xl font-semibold transition-all text-sm">
-        Begin your adventure →
-      </button>
     </form>
 
   </div>
