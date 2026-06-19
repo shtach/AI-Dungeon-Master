@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Quests — {{ session.character.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .qpage{min-height:100vh;display:flex;flex-direction:column;}
+  .qhead{display:flex;align-items:center;gap:14px;padding:16px 30px;border-bottom:1px solid var(--line);}
+  .qhead a{display:flex;align-items:center;gap:7px;color:var(--text-3);font-size:13px;} .qhead a:hover{color:var(--text);}
+  .qhead a svg{width:15px;height:15px;}
+  .qhead h1{font-family:'Newsreader',serif;font-size:19px;font-weight:500;}
+  .qbody{flex:1;max-width:720px;width:100%;margin:0 auto;padding:38px 28px 60px;}
+  .qtitle{font-family:'Newsreader',serif;font-size:23px;font-weight:500;margin-bottom:22px;}
+  .qsec{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3);margin:22px 0 12px;display:flex;align-items:center;gap:8px;}
+  .qsec:first-of-type{margin-top:0;}
+  .quest{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:11px;transition:border-color .15s;position:relative;overflow:hidden;}
+  .quest:hover{border-color:var(--line-2);}
+  .quest.active{border-left:3px solid var(--ember);}
+  .quest.done{opacity:.6;} .quest.done .qt{text-decoration:line-through;text-decoration-color:var(--text-3);}
+  .quest.offered{border-left:3px solid var(--gold);}
+  .qtop{display:flex;align-items:flex-start;gap:13px;}
+  .qicon{width:40px;height:40px;border-radius:10px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--ember-2);flex:none;}
+  .qicon svg{width:19px;height:19px;}
+  .quest.done .qicon{color:var(--good-2);}
+  .quest.offered .qicon{color:var(--gold);}
+  .qt{font-family:'Newsreader',serif;font-size:18px;font-weight:500;}
+  .qdesc{font-size:14px;color:var(--text-2);line-height:1.55;margin-top:11px;}
+  .qsteps{margin-top:13px;display:flex;flex-direction:column;gap:7px;}
+  .qstep{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text-2);}
+  .qstep .box{width:17px;height:17px;border-radius:5px;border:1.5px solid var(--line-2);flex:none;display:flex;align-items:center;justify-content:center;color:#1a0f08;}
+  .qstep.ok .box{background:var(--good);border-color:var(--good);} .qstep.ok .box svg{width:11px;height:11px;}
+  .qstep.ok{color:var(--text-3);text-decoration:line-through;}
+  .qstep .box svg{opacity:0;} .qstep.ok .box svg{opacity:1;}
+  .qactions{display:flex;gap:10px;margin-top:14px;}
+  .qempty{font-size:13.5px;color:var(--text-3);padding:30px 0;text-align:center;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qpage">
+  <div class="qhead">
+    <a href="{% url 'game:session' session.id %}"><svg data-lucide="arrow-left"></svg> Back to story</a>
+    <h1 class="serif">Quests</h1>
+  </div>
+  <div class="qbody">
+
+    {% if offered_quests %}
+    <div class="qsec"><svg data-lucide="circle-dot" style="width:14px;height:14px;color:var(--gold);"></svg> Offered</div>
+    <div class="stagger">
+      {% for quest in offered_quests %}
+      <div class="quest offered">
+        <div class="qtop">
+          <div class="qicon"><svg data-lucide="scroll-text"></svg></div>
+          <div>
+            <div class="qt">{{ quest.title }}</div>
+          </div>
+        </div>
+        {% if quest.description %}<div class="qdesc">{{ quest.description }}</div>{% endif %}
+        <div class="qactions">
+          <button class="btn btn-primary" onclick="questAction('{{ quest.id }}','accept',this)" style="padding:8px 16px;font-size:13px;">
+            <svg data-lucide="check" class="sm"></svg> Accept
+          </button>
+          <button class="btn btn-ghost" onclick="questAction('{{ quest.id }}','decline',this)" style="padding:8px 16px;font-size:13px;">
+            <svg data-lucide="x" class="sm"></svg> Decline
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if active_quests %}
+    <div class="qsec"><svg data-lucide="target" style="width:14px;height:14px;color:var(--ember-2);"></svg> Active</div>
+    <div class="stagger">
+      {% for quest in active_quests %}
+      <div class="quest active">
+        <div class="qtop">
+          <div class="qicon"><svg data-lucide="search"></svg></div>
+          <div>
+            <div class="qt">{{ quest.title }}</div>
+          </div>
+        </div>
+        {% if quest.description %}<div class="qdesc">{{ quest.description }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if completed_quests %}
+    <div class="qsec"><svg data-lucide="circle-check" style="width:14px;height:14px;color:var(--good-2);"></svg> Completed</div>
+    <div class="stagger">
+      {% for quest in completed_quests %}
+      <div class="quest done">
+        <div class="qtop">
+          <div class="qicon"><svg data-lucide="shield-check"></svg></div>
+          <div>
+            <div class="qt">{{ quest.title }}</div>
+          </div>
+        </div>
+        {% if quest.description %}<div class="qdesc">{{ quest.description }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not offered_quests and not active_quests and not completed_quests %}
+    <div class="qempty">
+      <svg data-lucide="scroll-text" style="width:28px;height:28px;color:var(--text-3);margin-bottom:8px;display:block;margin:0 auto 8px;"></svg>
+      No quests yet. The Dungeon Master will offer quests as your story unfolds.
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function questAction(questId, action, btn) {
+  const url = '/session/{{ session.id }}/quest/' + questId + '/' + action + '/';
+  const csrf = '{{ csrf_token }}';
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.accepted || d.declined) location.reload();
+  });
+}
+</script>
+{% endblock %}

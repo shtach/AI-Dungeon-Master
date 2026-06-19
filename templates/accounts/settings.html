@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Settings — AI Dungeon Master{% endblock %}
+
+{% block extra_head %}
+<style>
+  .shead{display:flex;align-items:center;gap:14px;padding:16px 30px;border-bottom:1px solid var(--line);}
+  .shead a{display:flex;align-items:center;gap:7px;color:var(--text-3);font-size:13px;} .shead a:hover{color:var(--text);}
+  .shead a svg{width:15px;height:15px;}
+  .shead h1{font-family:'Newsreader',serif;font-size:19px;font-weight:500;}
+  .sbody{flex:1;max-width:680px;width:100%;margin:0 auto;padding:38px 28px 60px;}
+  .group{margin-bottom:34px;}
+  .group>.gh{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .group>.gh svg{width:15px;height:15px;color:var(--ember-2);}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;}
+  .row .l .t{font-weight:500;font-size:14.5px;} .row .l .d{font-size:13px;color:var(--text-3);margin-top:2px;}
+  .toggle{width:46px;height:26px;border-radius:99px;background:var(--surface-3);border:1px solid var(--line-2);cursor:pointer;position:relative;transition:background .2s;flex:none;}
+  .toggle i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:99px;background:var(--text-3);transition:all .2s;}
+  .toggle.on{background:var(--ember);border-color:var(--ember);} .toggle.on i{left:22px;background:#1a0f08;}
+  select.input{cursor:pointer;width:auto;min-width:170px;}
+  .seg{display:flex;background:var(--bg);border:1px solid var(--line-2);border-radius:9px;padding:3px;gap:3px;}
+  .seg button{background:none;border:0;color:var(--text-2);font:inherit;font-size:13px;padding:6px 14px;border-radius:7px;cursor:pointer;}
+  .seg button.on{background:var(--ember-soft);color:var(--ember-2);}
+  .danger{border-color:rgba(176,68,40,.3);} .danger .l .t{color:var(--wound);}
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="min-height:100vh;display:flex;flex-direction:column;">
+  <div class="shead">
+    <a href="{% url 'game:dashboard' %}"><svg data-lucide="arrow-left"></svg> Back</a>
+    <h1 class="serif">Settings</h1>
+  </div>
+  <div class="sbody">
+    <div class="group">
+      <div class="gh"><svg data-lucide="dice-6"></svg> Gameplay</div>
+      <div class="row"><div class="l"><div class="t">Dice roll animation</div><div class="d">Show the d20 tumbling before it lands.</div></div><div class="toggle on" onclick="this.classList.toggle('on')"><i></i></div></div>
+      <div class="row"><div class="l"><div class="t">Screen shake on hits</div><div class="d">Jolt the screen when you take damage.</div></div><div class="toggle on" onclick="this.classList.toggle('on')"><i></i></div></div>
+      <div class="row"><div class="l"><div class="t">Narration length</div><div class="d">How much the Dungeon Master writes each turn.</div></div>
+        <div class="seg"><button>Short</button><button class="on">Balanced</button><button>Rich</button></div></div>
+    </div>
+    <div class="group">
+      <div class="gh"><svg data-lucide="sparkles"></svg> AI provider</div>
+      <div class="row"><div class="l"><div class="t">Model</div><div class="d">Which engine narrates your story.</div></div>
+        <select class="input"><option>Gemini 2.5 Flash</option><option>Ollama · gemma3 (local)</option><option>Ollama · qwen3:8b (local)</option><option>Mock (offline)</option></select></div>
+      <div class="row"><div class="l"><div class="t">Stream narration</div><div class="d">Reveal text word by word as it's written.</div></div><div class="toggle on" onclick="this.classList.toggle('on')"><i></i></div></div>
+    </div>
+    <div class="group">
+      <div class="gh"><svg data-lucide="monitor"></svg> Display</div>
+      <div class="row"><div class="l"><div class="t">Reduce motion</div><div class="d">Minimise animations across the interface.</div></div><div class="toggle" onclick="this.classList.toggle('on')"><i></i></div></div>
+      <div class="row"><div class="l"><div class="t">Narration font size</div><div class="d">Comfort of the reading column.</div></div>
+        <div class="seg"><button>S</button><button class="on">M</button><button>L</button></div></div>
+    </div>
+    <div class="group">
+      <div class="gh"><svg data-lucide="triangle-alert"></svg> Account</div>
+      <div class="row danger">
+        <div class="l"><div class="t">Sign out</div><div class="d">End your session on this device.</div></div>
+        <form method="post" action="{% url 'accounts:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost">Sign out</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.seg').forEach(function(seg) {
+  seg.querySelectorAll('button').forEach(function(b) {
+    b.onclick = function() {
+      seg.querySelectorAll('button').forEach(function(x) { x.classList.remove('on'); });
+      b.classList.add('on');
+    };
+  });
+});
+</script>
+{% endblock %}
