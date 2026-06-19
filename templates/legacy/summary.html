@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static tailwind_tags %}
+
+{% block title %}Session Summary{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-6">
+  <div class="max-w-lg w-full bg-dm-card rounded-2xl shadow-xl p-8 space-y-6">
+
+    <div class="text-center">
+      {% if summary.verdict == "DIED" %}
+        <h1 class="text-3xl font-bold text-red-400">You Have Fallen</h1>
+      {% elif summary.verdict == "WON" %}
+        <h1 class="text-3xl font-bold text-emerald-400">Victory!</h1>
+      {% else %}
+        <h1 class="text-3xl font-bold text-amber-400">Journey Abandoned</h1>
+      {% endif %}
+      <p class="text-dm-muted mt-2">{{ session.character.name }} — {{ session.world.name }}</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 text-center">
+      <div class="bg-dm-surface rounded-xl p-4">
+        <p class="text-dm-muted text-sm">Turns</p>
+        <p class="text-2xl font-semibold">{{ session.turn_count }}</p>
+      </div>
+      <div class="bg-dm-surface rounded-xl p-4">
+        <p class="text-dm-muted text-sm">Kills</p>
+        <p class="text-2xl font-semibold">{{ session.kills }}</p>
+      </div>
+      <div class="bg-dm-surface rounded-xl p-4">
+        <p class="text-dm-muted text-sm">Quests</p>
+        <p class="text-2xl font-semibold">{{ session.quests_completed }}</p>
+      </div>
+      <div class="bg-dm-surface rounded-xl p-4">
+        <p class="text-dm-muted text-sm">Gold</p>
+        <p class="text-2xl font-semibold">{{ session.gold_gathered }}</p>
+      </div>
+    </div>
+
+    {% if summary.deeds %}
+    <div>
+      <h2 class="text-lg font-semibold mb-2">Deeds</h2>
+      <ul class="space-y-1">
+        {% for deed in summary.deeds %}
+          <li class="text-dm-muted text-sm">- {{ deed }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <div class="text-center bg-dm-surface rounded-xl p-4">
+      <p class="text-dm-muted text-sm">Legacy Points Earned</p>
+      <p class="text-4xl font-bold text-amber-400">+{{ summary.points_awarded }}</p>
+    </div>
+
+    <div class="text-center">
+      <a href="{% url 'game:dashboard' %}"
+         class="inline-block px-6 py-3 bg-dm-accent text-white rounded-xl hover:opacity-90 transition">
+        Back to Dashboard
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
