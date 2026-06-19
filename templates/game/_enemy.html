@@ -1,0 +1,107 @@
+{% comment %}
+  Enemy panel (DEV-57). Mounts into #enemy-panel.
+  Combat endpoints return JSON (not HTML), so this renders client-side from
+  the combat payloads (DEV-43):
+    combat_start = {name, hp, ac, atk, dmg}   (parser) / {name, hp, ac} (start view)
+    attack       = {hit, damage, enemy_hp, combat_over}
+    enemy_hp     = int
+    combat_end   = {victory, detail}
+  The enemy HP bar uses an ember/wound gradient to read differently from the
+  player's green bar. Hit feedback = brief flash/shake; reduced-motion shows
+  the number change only.
+{% endcomment %}
+<div id="enemy-stage"></div>
+<style>
+  #enemy-panel:empty{display:none;}
+  #enemy-stage:empty{display:none;}
+  .enemy{position:relative;overflow:hidden;background:linear-gradient(165deg,var(--surface),var(--bg-2));
+    border:1px solid var(--line-2);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:14px;}
+  .enemy .ehead{display:flex;align-items:center;gap:13px;}
+  .enemy .esig{width:46px;height:46px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;
+    color:#1a0f08;background:linear-gradient(150deg,var(--wound),var(--danger));box-shadow:0 8px 22px -8px rgba(176,68,40,.5);}
+  .enemy .esig svg{width:24px;height:24px;stroke-width:2;}
+  .enemy .ename{font-family:'Newsreader',serif;font-size:19px;font-weight:500;}
+  .enemy .etag{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3);margin-top:1px;}
+  .enemy .estats{display:flex;gap:8px;}
+  .enemy .estat{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 6px;text-align:center;}
+  .enemy .estat .k{font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);}
+  .enemy .estat .v{font-size:15px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;margin-top:1px;}
+  .enemy .ehp{display:flex;flex-direction:column;gap:6px;}
+  .enemy .ehp .row{display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:1.1px;color:var(--text-3);}
+  .enemy .ehp .row b{color:var(--text-2);font-weight:500;font-variant-numeric:tabular-nums;}
+  /* enemy bar: ember->wound gradient, distinct from player's green .bar */
+  .ebar{height:8px;border-radius:99px;background:#000;overflow:hidden;}
+  .ebar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--wound),var(--ember-2));transition:width .5s var(--ease);}
+  /* hit / heal feedback */
+  .fx-hit{animation:fxhit .4s var(--ease);}
+  @keyframes fxhit{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+  .fx-flash{position:relative;}
+  .fx-flash::after{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--danger);opacity:0;animation:fxflash .45s ease;pointer-events:none;}
+  @keyframes fxflash{0%{opacity:.45}100%{opacity:0}}
+  .fx-heal::after{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--good);opacity:0;animation:fxflash .55s ease;pointer-events:none;}
+  @media (prefers-reduced-motion:reduce){
+    .fx-hit{animation:none;}
+    .fx-flash::after,.fx-heal::after{animation:none;opacity:0;}
+    .ebar i{transition:none;}
+  }
+</style>
+<script>
+(function(){
+  const REDUCE = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const stage = document.getElementById('enemy-stage');
+  if(!stage || stage.dataset.bound) return;
+  stage.dataset.bound = '1';
+  let state = null;  // {name, hp, max, ac, atk, dmg}
+  function pct(){ return state && state.max ? Math.max(0, Math.min(100, Math.round(state.hp/state.max*100))) : 0; }
+  function render(){
+    if(!state){ stage.innerHTML=''; return; }
+    const dmg = state.dmg ? ('1d'+state.dmg) : (state.damage_die || '\u2014');
+    stage.innerHTML =
+      '<div class="enemy" id="enemy-card">' +
+        '<div class="ehead">' +
+          '<div class="esig"><svg data-lucide="ghost"></svg></div>' +
+          '<div><div class="ename">'+esc(state.name||'Enemy')+'</div><div class="etag">In combat</div></div>' +
+        '</div>' +
+        '<div class="estats">' +
+          '<div class="estat"><div class="k">AC</div><div class="v">'+(state.ac??'\u2014')+'</div></div>' +
+          '<div class="estat"><div class="k">ATK</div><div class="v">'+(state.atk!=null?(state.atk>=0?'+':'')+state.atk:'\u2014')+'</div></div>' +
+          '<div class="estat"><div class="k">DMG</div><div class="v">'+esc(dmg)+'</div></div>' +
+        '</div>' +
+        '<div class="ehp">' +
+          '<div class="row"><span>Foe HP</span><b id="enemy-hp-label">'+state.hp+' / '+state.max+'</b></div>' +
+          '<div class="ebar"><i id="enemy-hp-fill" style="width:'+pct()+'%"></i></div>' +
+        '</div>' +
+      '</div>';
+    if(window.lucide) lucide.createIcons();
+  }
+  function esc(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function flash(el, kind){
+    if(!el) return;
+    el.classList.remove('fx-hit','fx-flash','fx-heal');
+    void el.offsetWidth;  // restart animation
+    el.classList.add(kind === 'heal' ? 'fx-heal' : 'fx-flash');
+    if(kind !== 'heal') el.classList.add('fx-hit');
+  }
+  document.addEventListener('dm:combat-start', function(e){
+    const c = e.detail || {};
+    const hp = c.hp != null ? c.hp : 10;
+    state = { name:c.name, hp:hp, max:c.max_hp || hp, ac:c.ac, atk:c.atk, dmg:c.dmg, damage_die:c.damage_die };
+    render();
+  });
+  document.addEventListener('dm:enemy-hp', function(e){
+    if(!state) return;
+    const d = e.detail || {};
+    const newHp = (d.enemy_hp != null) ? d.enemy_hp : d.hp;
+    if(newHp == null) return;
+    state.hp = Math.max(0, newHp);
+    const fill = document.getElementById('enemy-hp-fill');
+    const lbl = document.getElementById('enemy-hp-label');
+    if(fill) fill.style.width = pct()+'%';
+    if(lbl) lbl.textContent = state.hp+' / '+state.max;
+    if(d.hit !== false) flash(document.getElementById('enemy-card'), 'hit');
+  });
+  document.addEventListener('dm:combat-end', function(){
+    state = null; render();
+  });
+})();
+</script>

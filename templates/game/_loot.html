@@ -1,0 +1,108 @@
+{% comment %}
+  Loot take/leave card (DEV-58). Uses the theme .overlay/.modal.
+  Loot endpoints return JSON, so this is rendered client-side from the
+  `loot` payload (DEV-45). The parser emits {name, type, dmg, hit, bonuses,
+  lore}; pending_loot may also carry {slot, damage_die, hit_bonus, ac_bonus,
+  stat_bonuses}. We render whatever fields are present, defensively.
+
+  Take  → POST game:loot:take   (session/<id>/loot/take/)
+  Leave → POST game:loot:leave  (session/<id>/loot/leave/)
+{% endcomment %}
+
+<div id="loot-mount"
+     data-take-url="{% url 'loot:take' session.id %}"
+     data-leave-url="{% url 'loot:leave' session.id %}"
+     data-csrf="{{ csrf_token }}"></div>
+
+<style>
+  .loot-modal{max-width:420px;text-align:center;position:relative;overflow:hidden;}
+  .loot-modal .lglow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:220px;height:160px;
+    border-radius:50%;background:radial-gradient(circle,rgba(212,175,90,.22),transparent 70%);pointer-events:none;}
+  .loot-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;text-transform:uppercase;letter-spacing:1.4px;
+    color:var(--gold);background:rgba(212,175,90,.1);padding:5px 11px;border-radius:99px;margin-bottom:16px;}
+  .loot-eyebrow svg{width:13px;height:13px;}
+  .loot-icon{width:64px;height:64px;border-radius:16px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;
+    background:var(--surface-2);color:var(--gold);border:1px solid var(--line-2);}
+  .loot-icon svg{width:30px;height:30px;}
+  .loot-name{font-family:'Newsreader',serif;font-size:23px;font-weight:500;margin-bottom:3px;}
+  .loot-type{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--text-3);margin-bottom:14px;}
+  .loot-tags{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-bottom:16px;}
+  .loot-lore{font-family:'Newsreader',serif;font-style:italic;font-size:14.5px;line-height:1.6;color:var(--text-2);
+    margin-bottom:8px;padding:0 6px;}
+  .loot-forged{font-size:11px;color:var(--text-3);display:inline-flex;align-items:center;gap:6px;margin-bottom:22px;}
+  .loot-forged svg{width:12px;height:12px;}
+  .loot-actions{display:flex;gap:10px;}
+  .loot-actions .btn{flex:1;justify-content:center;}
+  /* rarity accent on the modal border */
+  .loot-modal[data-rarity="uncommon"]{border-color:var(--r-uncommon);}
+  .loot-modal[data-rarity="rare"]{border-color:var(--r-rare);}
+  .loot-modal[data-rarity="epic"]{border-color:var(--r-epic);}
+  .loot-modal[data-rarity="legendary"]{border-color:var(--r-legendary);box-shadow:0 0 0 1px var(--r-legendary),0 30px 70px -30px rgba(212,175,90,.4);}
+</style>
+
+<script>
+(function(){
+  const mount = document.getElementById('loot-mount');
+  if(!mount || mount.dataset.bound) return;
+  mount.dataset.bound = '1';
+
+  function esc(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  function tags(loot){
+    const out = [];
+    if(loot.dmg || loot.damage_die) out.push('<span class="tag tag-roll">DMG '+esc(loot.dmg||loot.damage_die)+'</span>');
+    if(loot.hit != null || loot.hit_bonus != null){ const v = loot.hit != null ? loot.hit : loot.hit_bonus; out.push('<span class="tag tag-roll">'+(v>=0?'+':'')+v+' to hit</span>'); }
+    if(loot.ac_bonus) out.push('<span class="tag tag-roll">+'+loot.ac_bonus+' AC</span>');
+    if(loot.bonuses) out.push('<span class="tag tag-free">'+esc(loot.bonuses)+'</span>');
+    if(loot.stat_bonuses){ for(const k in loot.stat_bonuses){ out.push('<span class="tag tag-roll">+'+loot.stat_bonuses[k]+' '+esc(k.slice(0,3).toUpperCase())+'</span>'); } }
+    return out.join('');
+  }
+
+  function iconFor(loot){
+    const t = (loot.slot || loot.type || '').toString().toUpperCase();
+    if(t.indexOf('WEAPON')>-1 || loot.dmg || loot.damage_die) return 'sword';
+    if(t.indexOf('ARMOR')>-1 || loot.ac_bonus) return 'shield';
+    return 'gem';
+  }
+
+  window.showLoot = function(loot){
+    if(!loot){ return; }
+    const rarity = (loot.rarity || '').toLowerCase();
+    mount.innerHTML =
+      '<div class="overlay" id="loot-overlay">' +
+        '<div class="modal loot-modal"'+(rarity?' data-rarity="'+esc(rarity)+'"':'')+'>' +
+          '<div class="lglow"></div>' +
+          '<span class="loot-eyebrow"><svg data-lucide="sparkles"></svg> Loot found</span>' +
+          '<div class="loot-icon"><svg data-lucide="'+iconFor(loot)+'"></svg></div>' +
+          '<div class="loot-name">'+esc(loot.name||'Unknown item')+'</div>' +
+          (loot.type||loot.slot ? '<div class="loot-type">'+esc(loot.type||loot.slot)+'</div>' : '') +
+          (tags(loot) ? '<div class="loot-tags">'+tags(loot)+'</div>' : '') +
+          (loot.lore ? '<div class="loot-lore">'+esc(loot.lore)+'</div>' : '') +
+          '<div class="loot-forged"><svg data-lucide="wand-sparkles"></svg> Forged by the Dungeon Master</div>' +
+          '<div class="loot-actions">' +
+            '<button type="button" class="btn btn-primary" id="loot-take">Take it <svg data-lucide="check" class="sm"></svg></button>' +
+            '<button type="button" class="btn btn-ghost" id="loot-leave">Leave it</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    if(window.lucide) lucide.createIcons();
+
+    document.getElementById('loot-take').onclick = () => post(mount.dataset.takeUrl, 'taken');
+    document.getElementById('loot-leave').onclick = () => post(mount.dataset.leaveUrl, 'left');
+  };
+
+  function post(url, kind){
+    const ov = document.getElementById('loot-overlay');
+    mount.querySelectorAll('.btn').forEach(b => b.disabled = true);
+    fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-CSRFToken': mount.dataset.csrf }, body:'{}' })
+      .then(r => r.json())
+      .then(d => { document.dispatchEvent(new CustomEvent('dm:loot-resolved', { detail:{ kind, data:d } })); close(); })
+      .catch(() => { mount.querySelectorAll('.btn').forEach(b => b.disabled = false); });
+  }
+
+  function close(){ mount.innerHTML=''; }
+
+  // turn layer (FE-06) emits dm:loot with the payload
+  document.addEventListener('dm:loot', e => window.showLoot(e.detail || {}));
+})();
+</script>
