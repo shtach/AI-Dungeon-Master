@@ -20,3 +20,10 @@ class AIProviderError(Exception):
         Examples: rate limit, invalid key, network timeout, malformed response.
         Caller may retry or show a user-friendly message.
     """
+
+class AIRateLimitError(AIProviderError):
+    """
+        Raised when the provider rejects a call with a rate-limit (HTTP 429).
+        A subclass of AIProviderError so existing handlers keep working, while
+        metering can flag these calls distinctly from other provider failures.
+    """
