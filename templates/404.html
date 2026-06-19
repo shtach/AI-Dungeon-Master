@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}404 — This Path Leads Nowhere{% endblock %}
+
+{% block content %}
+<section class="flex min-h-[80vh] items-center justify-center px-6">
+    <div class="mx-auto max-w-2xl text-center">
+
+        <div class="mb-6">
+            <div class="font-serif text-8xl font-bold tracking-wider text-amber-500 md:text-9xl">
+                404
+            </div>
+        </div>
+
+        <div class="mx-auto mb-6 h-px w-32 bg-gradient-to-r from-transparent via-amber-500 to-transparent"></div>
+
+        <h1 class="mb-4 font-serif text-3xl text-zinc-100 md:text-4xl">
+            This path leads nowhere
+        </h1>
+
+        <p class="mb-10 text-lg text-zinc-400">
+            The trail vanishes into cold ash. Whatever once stood here has been lost
+            to time and shadow.
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-4">
+            <a
+                href="/"
+                class="rounded-md border border-amber-600 bg-amber-600/10 px-6 py-3 text-amber-400 transition hover:bg-amber-600/20"
+            >
+                Return Home
+            </a>
+
+            <button
+                type="button"
+                onclick="history.back()"
+                class="rounded-md border border-zinc-700 px-6 py-3 text-zinc-300 transition hover:border-amber-500 hover:text-white"
+            >
+                Back to Story
+            </button>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

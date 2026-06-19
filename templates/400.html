@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}400 — The Runes Were Garbled{% endblock %}
+
+{% block content %}
+<section class="flex min-h-[80vh] items-center justify-center px-6">
+    <div class="mx-auto max-w-2xl text-center">
+
+        <div class="mb-6">
+            <div class="font-serif text-8xl font-bold tracking-wider text-teal-500 md:text-9xl">
+                400
+            </div>
+        </div>
+
+        <div class="mx-auto mb-6 h-px w-32 bg-gradient-to-r from-transparent via-teal-500 to-transparent"></div>
+
+        <h1 class="mb-4 font-serif text-3xl text-zinc-100 md:text-4xl">
+            The runes were garbled
+        </h1>
+
+        <p class="mb-10 text-lg text-zinc-400">
+            What reached us didn't form a spell we could read. The shapes
+            were close, but something in the casting came out twisted.
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-4">
+            <a
+                href="/"
+                class="rounded-md border border-teal-600 bg-teal-600/10 px-6 py-3 text-teal-400 transition hover:bg-teal-600/20"
+            >
+                Return Home
+            </a>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
