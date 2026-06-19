@@ -1,0 +1,18 @@
+{% comment %}
+  Brand mark — ember sigil + "AI Dungeon Master" wordmark.
+  Used by auth pages, landing nav, error pages.
+  Optional context vars:
+    brand_size  — "sm" for the compact inline mark (nav); omit for the large stacked mark.
+    brand_icon  — lucide icon name for the sigil (default: swords).
+{% endcomment %}
+{% if brand_size == "sm" %}
+<a href="/" class="brand-inline" style="display:inline-flex;align-items:center;gap:11px;">
+    <span class="sigil sm"><svg data-lucide="{{ brand_icon|default:'swords' }}"></svg></span>
+    <span class="serif" style="font-size:18px;font-weight:500;letter-spacing:-.2px;">AI Dungeon Master</span>
+</a>
+{% else %}
+<div class="brand" style="display:flex;flex-direction:column;align-items:center;gap:15px;">
+    <span class="sigil"><svg data-lucide="{{ brand_icon|default:'swords' }}"></svg></span>
+    <h1 class="serif" style="font-size:27px;font-weight:500;letter-spacing:-.3px;">AI Dungeon Master</h1>
+</div>
+{% endif %}

@@ -6,9 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AI Dungeon Master{% endblock %}</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
     {% tailwind_css %}
 
-    {% block extra_css %}{% endblock %}
+    {% block extra_head %}{% endblock %}
 </head>
 <body class="h-full bg-dm-bg text-dm-text font-sans">
 
@@ -21,6 +25,15 @@
 
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Lucide icons (global) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        function renderIcons() { if (window.lucide) window.lucide.createIcons(); }
+        document.addEventListener("DOMContentLoaded", renderIcons);
+        // Re-run after every HTMX swap so fragment-injected icons render.
+        document.body.addEventListener("htmx:afterSwap", renderIcons);
+    </script>
 
     <!-- CSRF token for HTMX POST requests -->
     <script>

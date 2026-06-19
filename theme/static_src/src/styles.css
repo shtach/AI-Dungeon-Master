@@ -5,43 +5,192 @@
  */
 @source "../../../**/*.{html,py,js}";
 
+/* ============================================================
+   AI DUNGEON MASTER — design system (FE-00)
+   Ported verbatim from the approved mockups (plan/screens).
+   One canonical palette: warm ember dark. No purple admin theme.
+
+   Palette maps to the existing Tailwind dm-* utilities:
+     --bg → dm-bg   --surface → dm-surface   --ember → dm-accent
+     --text → dm-text   --text-2 → dm-muted
+   so every dm-* class already used in templates keeps resolving.
+   ============================================================ */
+
 /**
- * AI Dungeon Master custom color palette (Tailwind v4 @theme).
- * Use as: bg-dm-bg, text-dm-accent, border-dm-muted, etc.
+ * Tailwind v4 tokens. dm-* utilities (bg-dm-bg, text-dm-accent, …)
+ * resolve to the canonical ember palette below.
  */
 @theme {
-    --color-dm-bg:      #0d0d14;   /* Page background — very dark navy */
-    --color-dm-surface: #161622;   /* Cards, panels */
-    --color-dm-accent:  #a78bfa;   /* Purple accent — primary interactive */
-    --color-dm-text:    #e2e8f0;   /* Main text — light slate */
-    --color-dm-muted:   #64748b;   /* Secondary text, borders */
+    --color-dm-bg:      #0f0d0b;   /* Page background — warm near-black */
+    --color-dm-surface: #1a1611;   /* Cards, panels */
+    --color-dm-accent:  #d98344;   /* Ember — primary interactive */
+    --color-dm-text:    #f0e9da;   /* Main text — warm parchment */
+    --color-dm-muted:   #b3a892;   /* Secondary text, borders */
+
+    --font-family-sans:  "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-family-serif: "Newsreader", Georgia, serif;
 }
 
-@theme {
-    --font-family-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-    --font-family-mono: "JetBrains Mono", ui-monospace, monospace;
+/**
+ * Full palette + component layer as CSS custom properties on :root, so
+ * both Tailwind utilities and the raw component classes below read one
+ * source of truth. Lifted from the approved landing/screens CSS.
+ */
+:root{
+  --bg:#0f0d0b; --bg-2:#0a0807; --surface:#1a1611; --surface-2:#221c16; --surface-3:#2b2419;
+  --line:#2c2519; --line-2:#473a28;
+  --text:#f0e9da; --text-2:#b3a892; --text-3:#7a7060;
+  --ember:#d98344; --ember-2:#f0a45e; --ember-soft:#3a2416;
+  --good:#7c9255; --good-2:#a8c06a; --wound:#c06a3a; --danger:#b04428;
+  --gold:#d4af5a; --violet:#9a7bc4; --teal:#5b9b8f;
+  --r-common:#8a8378; --r-uncommon:#7c9255; --r-rare:#5a85b0; --r-epic:#9a6fb0; --r-legendary:#d4af5a;
+  --radius:14px; --radius-sm:10px; --ease:cubic-bezier(.4,0,.2,1);
 }
 
-/* Django form inputs — global style */
 @layer base {
-    input[type="text"],
-    input[type="password"],
-    input[type="email"],
-    input[type="number"],
-    textarea,
-    select {
-        width: 100%;
-        background-color: var(--color-dm-bg);
-        color: var(--color-dm-text);
-        border: 1px solid color-mix(in srgb, var(--color-dm-muted) 40%, transparent);
-        border-radius: 0.5rem;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.875rem;
-        outline: none;
-    }
-    input:focus,
-    textarea:focus,
-    select:focus {
-        border-color: var(--color-dm-accent);
-    }
+  html,body{height:100%;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:15px;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  ::selection{background:var(--ember-soft);color:var(--ember-2);}
+
+  *::-webkit-scrollbar{width:10px;height:10px;}
+  *::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:99px;border:3px solid var(--bg);}
+  *::-webkit-scrollbar-track{background:transparent;}
+
+  /* Django form inputs — global style, matched to the .input component */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  textarea,
+  select{
+    width:100%;
+    background:var(--bg);
+    color:var(--text);
+    border:1px solid var(--line-2);
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    font:inherit;
+    font-size:14px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  input:focus,textarea:focus,select:focus{border-color:var(--ember);}
+}
+
+@layer components {
+  .serif{font-family:'Newsreader',Georgia,serif;}
+
+  /* lucide sizing */
+  svg[data-lucide]{stroke-width:1.7;width:18px;height:18px;display:block;flex:none;}
+  svg[data-lucide].sm{width:15px;height:15px;}
+  svg[data-lucide].lg{width:22px;height:22px;}
+
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:14px;font-weight:500;padding:11px 18px;
+    border-radius:var(--radius-sm);border:1px solid transparent;cursor:pointer;text-decoration:none;
+    transition:transform .12s var(--ease),background .15s,border-color .15s,opacity .15s;}
+  .btn:active{transform:scale(.98);}
+  .btn-primary{background:var(--ember);color:#1a0f08;box-shadow:0 6px 22px -6px rgba(217,131,68,.5);}
+  .btn-primary:hover{background:var(--ember-2);}
+  .btn-ghost{background:transparent;color:var(--text-2);border-color:var(--line-2);}
+  .btn-ghost:hover{color:var(--text);background:var(--surface);}
+  .btn-soft{background:var(--surface-2);color:var(--text);}
+  .btn-soft:hover{background:var(--surface-3);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-block{width:100%;justify-content:center;}
+
+  /* eyebrow pill */
+  .eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:11px;text-transform:uppercase;letter-spacing:1.4px;
+    font-weight:600;color:var(--ember-2);background:var(--ember-soft);padding:5px 11px;border-radius:99px;}
+  .eyebrow svg{width:14px;height:14px;}
+
+  /* fields */
+  .field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px;}
+  .field label{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-3);font-weight:500;}
+  .input{background:var(--bg);border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);
+    font:inherit;font-size:14px;transition:border-color .15s;width:100%;}
+  .input::placeholder{color:var(--text-3);}
+  .input:focus{outline:none;border-color:var(--ember);}
+  textarea.input{resize:vertical;min-height:90px;}
+
+  /* card / panel / glass */
+  .card{background:linear-gradient(165deg,var(--surface),var(--bg-2));border:1px solid var(--line);border-radius:16px;
+    transition:border-color .15s,transform .15s;position:relative;overflow:hidden;}
+  .card:hover{border-color:var(--line-2);transform:translateY(-2px);}
+  .glass{background:linear-gradient(165deg,var(--surface),var(--bg-2));border:1px solid var(--line-2);border-radius:18px;
+    box-shadow:0 40px 90px -40px rgba(0,0,0,.8);}
+
+  /* tags / bars / stats */
+  .tag{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:500;}
+  .tag-roll{color:var(--ember-2);background:var(--ember-soft);}
+  .tag-free{color:var(--text-3);border:1px solid var(--line-2);}
+  .bar{height:7px;border-radius:99px;background:#000;overflow:hidden;}
+  .bar i{display:block;height:100%;border-radius:99px;background:var(--good);transition:width .6s var(--ease),background .4s;}
+  .bar i.wounded{background:var(--wound);}
+  .bar.pulse i{animation:hppulse .5s ease;}
+  @keyframes hppulse{0%,100%{filter:brightness(1)}40%{filter:brightness(1.8)}}
+  .statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .stat{background:var(--surface);padding:10px 6px;text-align:center;display:flex;flex-direction:column;gap:1px;}
+  .stat .k{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);}
+  .stat .v{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;}
+  .stat .m{font-size:11px;color:var(--text-2);}
+  .stat.key .v{color:var(--ember-2);}
+
+  /* app shell (game/inventory/quests/codex share it) */
+  .shell{display:grid;grid-template-columns:264px 1fr;}
+  .side{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:20px 16px;gap:18px;overflow-y:auto;}
+  .side .who{display:flex;align-items:center;gap:12px;}
+  .side .who .av{width:42px;height:42px;border-radius:11px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--ember-2);flex:none;}
+  .side .who .name{font-size:17px;font-weight:600;}
+  .side .who .meta{font-size:12.5px;color:var(--text-2);}
+  .navlinks{display:flex;flex-direction:column;gap:2px;}
+  .navlink{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:var(--radius-sm);color:var(--text-2);font-size:14px;cursor:pointer;transition:background .14s,color .14s;}
+  .navlink:hover{background:var(--surface-2);color:var(--text);}
+  .navlink.active{background:var(--ember-soft);color:var(--ember-2);}
+  .navlink svg{width:17px;height:17px;}
+  .navlink .badge{margin-left:auto;font-size:11px;background:var(--surface-3);color:var(--text-2);padding:1px 7px;border-radius:99px;}
+  .home{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3);margin-top:auto;cursor:pointer;}
+  .home:hover{color:var(--text);}
+  .main{display:flex;flex-direction:column;min-width:0;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:15px 22px;border-bottom:1px solid var(--line);}
+  .topbar .t{font-size:14px;font-weight:600;}
+  .topbar .s{font-size:12px;color:var(--text-3);}
+
+  /* modal / toast */
+  .overlay{position:absolute;inset:0;background:rgba(8,6,4,.74);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:50;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);width:min(460px,90%);padding:26px;animation:modalin .3s var(--ease);}
+  @keyframes modalin{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:11px 16px;display:flex;align-items:center;gap:10px;font-size:13.5px;z-index:60;animation:toastin .3s var(--ease);box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  @keyframes toastin{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+  /* brand sigil */
+  .sigil{width:60px;height:60px;border-radius:15px;background:linear-gradient(150deg,var(--ember),#9a5226);display:flex;align-items:center;justify-content:center;color:#1a0f08;box-shadow:0 10px 34px rgba(217,131,68,.4);}
+  .sigil svg{width:30px;height:30px;stroke-width:2;}
+  .sigil.sm{width:38px;height:38px;border-radius:11px;}
+  .sigil.sm svg{width:20px;height:20px;}
+
+  /* full-page background wash + ambient embers (reusable helpers) */
+  .page-wash{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+    radial-gradient(ellipse 60% 50% at 50% 0,rgba(217,131,68,.13),transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 90%,rgba(154,123,196,.07),transparent 60%);}
+  .embers{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+  .ember{position:absolute;bottom:-10px;width:3px;height:3px;border-radius:99px;background:var(--ember-2);opacity:0;filter:blur(.4px);animation:drift linear infinite;}
+  @keyframes drift{0%{transform:translateY(0);opacity:0}10%{opacity:.8}90%{opacity:.3}100%{transform:translateY(-100vh);opacity:0}}
+
+  /* reveal */
+  .reveal{animation:reveal .5s var(--ease) both;}
+  @keyframes reveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .stagger>*{animation:reveal .5s var(--ease) both;}
+  .stagger>*:nth-child(1){animation-delay:.04s}.stagger>*:nth-child(2){animation-delay:.10s}
+  .stagger>*:nth-child(3){animation-delay:.16s}.stagger>*:nth-child(4){animation-delay:.22s}
+  .stagger>*:nth-child(5){animation-delay:.28s}.stagger>*:nth-child(6){animation-delay:.34s}
+  .stagger>*:nth-child(7){animation-delay:.40s}.stagger>*:nth-child(8){animation-delay:.46s}
+}
+
+/* honour reduced motion globally (landing parity) */
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;}
+  .embers{display:none;}
 }
