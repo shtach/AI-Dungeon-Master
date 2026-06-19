@@ -8,6 +8,30 @@ from ai_dungeon_master.apps.game.models import GameSession
 from .models import LegacyPerk, OwnedPerk, PlayerProfile, Relic, SessionSummary
 
 
+class VaultView(LoginRequiredMixin, View):
+    def get(self, request):
+        profile, _ = PlayerProfile.objects.get_or_create(user=request.user)
+        relics = Relic.objects.filter(profile=profile)
+        all_perks = LegacyPerk.objects.all()
+        owned_perk_ids = set(
+            OwnedPerk.objects.filter(profile=profile).values_list("perk_id", flat=True)
+        )
+        owned_perks = []
+        buyable_perks = []
+        for perk in all_perks:
+            if perk.id in owned_perk_ids:
+                owned_perks.append(perk)
+            else:
+                buyable_perks.append(perk)
+
+        return render(request, "legacy/vault.html", {
+            "profile": profile,
+            "relics": relics,
+            "owned_perks": owned_perks,
+            "buyable_perks": buyable_perks,
+        })
+
+
 class SessionSummaryView(LoginRequiredMixin, View):
     def get(self, request, session_id):
         session = get_object_or_404(
