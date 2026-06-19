@@ -1,0 +1,47 @@
+{% load hp_extras %}
+<aside class="side" style="width:280px;flex:none;padding:22px 20px;border-right:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto;">
+  <a href="{% url 'game:dashboard' %}" style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-3);margin-bottom:20px;text-decoration:none;">
+    <svg data-lucide="arrow-left" style="width:15px;height:15px;"></svg> Dashboard
+  </a>
+
+  <div class="who" style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+    <div style="width:42px;height:42px;border-radius:11px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--ember-2);flex:none;">
+      <svg data-lucide="user-round"></svg>
+    </div>
+    <div>
+      <div class="name">{{ session.character.name }}</div>
+      <div style="font-size:12.5px;color:var(--text-3);">{{ session.character.get_race_display }} {{ session.character.get_character_class_display }} · Lv {{ session.character.level }}</div>
+    </div>
+  </div>
+
+  <div class="sec-lbl">Health</div>
+  <div id="hp-bar" style="margin-bottom:18px;">
+    {% include "game/_hp_bar.html" with current=session.character.current_hp max=session.character.max_hp show_label=True %}
+  </div>
+
+  <div class="sec-lbl">Stats</div>
+  <div class="sheet-line" style="margin-bottom:16px;">
+    <div class="sl">STR <b>{{ session.character.strength }}</b></div>
+    <div class="sl">DEX <b>{{ session.character.dexterity }}</b></div>
+  </div>
+  <div class="sheet-line" style="margin-bottom:16px;">
+    <div class="sl">CON <b>{{ session.character.constitution }}</b></div>
+    <div class="sl">INT <b>{{ session.character.intelligence }}</b></div>
+  </div>
+  <div class="sheet-line" style="margin-bottom:18px;">
+    <div class="sl">WIS <b>{{ session.character.wisdom }}</b></div>
+    <div class="sl">CHA <b>{{ session.character.charisma }}</b></div>
+  </div>
+
+  <div class="sec-lbl">Scenario</div>
+  <div style="font-size:13px;color:var(--text-2);margin-bottom:18px;">{{ session.scenario.title }}</div>
+
+  <div class="sec-lbl">World</div>
+  <div style="font-size:13px;color:var(--text-2);margin-bottom:auto;">{{ session.world.name }}</div>
+
+  <div style="margin-top:18px;display:flex;flex-direction:column;gap:6px;">
+    <a class="navlink" href="{% url 'game:dashboard' %}" style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--radius-sm);font-size:13px;color:var(--text-2);text-decoration:none;transition:background .12s;">
+      <svg data-lucide="layout-grid" style="width:16px;height:16px;"></svg> Characters
+    </a>
+  </div>
+</aside>
