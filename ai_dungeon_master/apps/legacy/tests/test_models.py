@@ -10,10 +10,18 @@ from ai_dungeon_master.apps.legacy.models import (
 )
 from ai_dungeon_master.apps.characters.models import Character, InventoryItem
 from ai_dungeon_master.apps.game.models import GameSession
+from ai_dungeon_master.apps.world.models import WorldSetting, Scenario
 
 pytestmark = pytest.mark.django_db
 
 User = get_user_model()
+
+
+@pytest.fixture
+def world_scenario():
+    world = WorldSetting.objects.create(name="Dark Realm", description="A grim world", ai_instructions="Be dark")
+    scenario = Scenario.objects.create(world=world, title="The Descent", intro_text="You descend...")
+    return world, scenario
 
 
 class TestProfileAutoCreated:
@@ -32,8 +40,9 @@ class TestProfileAutoCreated:
 
 
 class TestRelicSnapshot:
-    def test_relic_snapshot_fields(self, auth_client):
+    def test_relic_snapshot_fields(self, auth_client, world_scenario):
         _, user = auth_client
+        world, scenario = world_scenario
         profile = PlayerProfile.objects.get(user=user)
         character = Character.objects.create(user=user, name="Rogue1", character_class="ROGUE")
         item = InventoryItem.objects.create(
@@ -48,11 +57,7 @@ class TestRelicSnapshot:
             stat_bonuses={"stealth": 1},
         )
         session = GameSession.objects.create(
-            user=user,
-            character=character,
-            world=None,
-            scenario=None,
-            status="DEAD",
+            user=user, character=character, world=world, scenario=scenario, status="DEAD",
         )
         relic = Relic.objects.create(
             profile=profile,
@@ -130,12 +135,13 @@ class TestPerkCatalogue:
 
 
 class TestSessionSummary:
-    def test_summary_creation(self, auth_client):
+    def test_summary_creation(self, auth_client, world_scenario):
         _, user = auth_client
+        world, scenario = world_scenario
         profile = PlayerProfile.objects.get(user=user)
         character = Character.objects.create(user=user, name="Hero", character_class="WARRIOR")
         session = GameSession.objects.create(
-            user=user, character=character, world=None, scenario=None, status="DEAD"
+            user=user, character=character, world=world, scenario=scenario, status="DEAD",
         )
         summary = SessionSummary.objects.create(
             session=session,
@@ -149,17 +155,18 @@ class TestSessionSummary:
         assert summary.points_awarded == 25
         assert len(summary.deeds) == 2
 
-    def test_summary_one_to_one_with_session(self, auth_client):
+    def test_summary_one_to_one_with_session(self, auth_client, world_scenario):
         _, user = auth_client
+        world, scenario = world_scenario
         profile = PlayerProfile.objects.get(user=user)
         character = Character.objects.create(user=user, name="Hero2", character_class="WIZARD")
         session = GameSession.objects.create(
-            user=user, character=character, world=None, scenario=None, status="WON"
+            user=user, character=character, world=world, scenario=scenario, status="WON",
         )
         SessionSummary.objects.create(
-            session=session, profile=profile, verdict="WON", points_awarded=50
+            session=session, profile=profile, verdict="WON", points_awarded=50,
         )
         with pytest.raises(Exception):
             SessionSummary.objects.create(
-                session=session, profile=profile, verdict="DIED", points_awarded=10
+                session=session, profile=profile, verdict="DIED", points_awarded=10,
             )
