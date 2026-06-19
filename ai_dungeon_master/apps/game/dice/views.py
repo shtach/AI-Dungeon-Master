@@ -1,6 +1,7 @@
 import json
 import random
 
+from django.db.models import Case, F, When
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views import View
@@ -63,6 +64,16 @@ class RollView(LoginRequiredMixin, View):
             message=msg,
             dice_type=dice_type,
             result=roll,
+        )
+
+        GameSession.objects.filter(id=session.id).update(
+            dice_rolled=F("dice_rolled") + 1,
+            nat20s=F("nat20s") + (1 if roll == 20 else 0),
+            nat1s=F("nat1s") + (1 if roll == 1 else 0),
+            highest_roll=Case(
+                When(highest_roll__lt=roll, then=roll),
+                default=F("highest_roll"),
+            ),
         )
 
         return JsonResponse({
