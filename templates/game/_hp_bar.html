@@ -1,0 +1,20 @@
+{% comment %}
+  Reusable HP bar — single source of truth for the colour bands (DEV-52).
+  Fixes the old bug where {% widthratio %} (a STRING) compared against an int
+  with `>= 100` painted the bar red at anything below exactly full. The
+  hp_extras filters return real numbers so the bands compare correctly:
+  healthy = green (--good); low (<= 33%) = wounded (--wound).
+
+  Params:
+    current     — current HP (int)
+    max         — max HP (int)
+    show_label  — optional bool; renders "HEALTH  cur / max" above the bar
+{% endcomment %}
+{% load hp_extras %}
+{% if show_label %}
+<div style="display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:1.1px;color:var(--text-3);margin-bottom:6px;">
+  <span>Health</span>
+  <span style="color:var(--text-2);font-variant-numeric:tabular-nums;">{{ current }} / {{ max }}</span>
+</div>
+{% endif %}
+<div class="bar"><i class="{% if current|hp_wounded:max %}wounded{% endif %}" style="width:{{ current|hp_percent:max }}%;"></i></div>

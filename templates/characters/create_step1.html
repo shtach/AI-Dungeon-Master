@@ -1,121 +1,86 @@
 {% extends "base.html" %}
 
-{% block title %} Create Character — Step 1 of 4 {% endblock %}
+{% block title %}New hero · Name & race{% endblock %}
+
+{% block extra_head %}
+<style>
+  .wizpage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:46px 24px;position:relative;}
+  .wizpage::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 35% at 50% 0,rgba(217,131,68,.09),transparent 60%);}
+  .wiz{width:min(620px,100%);position:relative;z-index:1;}
+  .prog{margin-bottom:32px;}
+  .prog .steps{display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-3);margin-bottom:10px;}
+  .prog .steps b{color:var(--ember-2);font-weight:600;}
+  .prog .track{height:3px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
+  .prog .track i{display:block;height:100%;background:linear-gradient(90deg,var(--ember),var(--ember-2));border-radius:99px;transition:width .5s var(--ease);}
+  .wiz h1{font-family:'Newsreader',serif;font-size:28px;font-weight:500;margin-bottom:6px;}
+  .wiz .lead{color:var(--text-3);font-size:14.5px;margin-bottom:26px;}
+  .opts{display:flex;flex-direction:column;gap:10px;margin:22px 0 30px;}
+  .opt{display:flex;align-items:center;gap:15px;padding:15px 17px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);cursor:pointer;transition:border-color .15s,background .15s,transform .12s;width:100%;text-align:left;font:inherit;color:inherit;}
+  .opt:hover{border-color:var(--line-2);transform:translateX(2px);}
+  .opt.sel{border-color:var(--ember);background:var(--ember-soft);}
+  .opt .ic{width:44px;height:44px;border-radius:11px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--text-2);flex:none;transition:color .15s;}
+  .opt.sel .ic{color:var(--ember-2);}
+  .opt .ic svg{width:22px;height:22px;}
+  .opt .t{font-weight:600;font-size:15px;} .opt .d{font-size:13px;color:var(--text-3);margin-top:1px;}
+  .opt .check{margin-left:auto;width:22px;height:22px;border-radius:99px;border:2px solid var(--line-2);display:flex;align-items:center;justify-content:center;flex:none;transition:all .15s;color:#1a0f08;}
+  .opt.sel .check{border-color:var(--ember);background:var(--ember);}
+  .opt .check svg{width:13px;height:13px;opacity:0;transition:opacity .15s;}
+  .opt.sel .check svg{opacity:1;}
+  .wnav{display:flex;justify-content:space-between;align-items:center;}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center py-12 px-4">
-  <div class="w-full max-w-xl" x-data="{ selectedRace: '{{ wizard_data.race|default:'' }}' }">
+<div class="wizpage">
+  <div class="wiz reveal" x-data="{ selectedRace: '{{ wizard_data.race|default:'' }}' }">
 
-    <!-- Progress bar -->
-    <div class="mb-8">
-      <div class="flex justify-between text-xs text-dm-muted mb-2">
-        <span class="text-dm-accent font-semibold">Step 1 of 4</span>
-        <span>Name &amp; Race</span>
-      </div>
-      <div class="h-1 rounded-full bg-dm-surface">
-        <div class="h-1 rounded-full bg-dm-accent" style="width: 25%"></div>
-      </div>
+    <div class="prog">
+      <div class="steps"><b>1 · Name &amp; race</b><span>2 · Class</span><span>3 · Stats</span><span>4 · Review</span></div>
+      <div class="track"><i style="width:25%"></i></div>
     </div>
 
-    <h1 class="text-2xl font-bold text-dm-text mb-1">Who are you?</h1>
-    <p class="text-dm-muted text-sm mb-8">Give your adventurer a name and choose their lineage.</p>
+    <h1 class="serif">Who are you?</h1>
+    <p class="lead">Name your hero and choose their lineage.</p>
 
     <form method="post" action="{% url 'characters:create_step1' %}">
       {% csrf_token %}
 
-      <!-- Name -->
-      <div class="mb-6">
-        <label class="block text-xs text-dm-muted uppercase tracking-widest mb-2">Character Name</label>
-        <input type="text" name="name" value="{{ wizard_data.name|default:'' }}"
-               placeholder="e.g. Thorin Ironforge" required>
+      <div class="field">
+        <label>Hero name</label>
+        <input class="input" type="text" name="name" value="{{ wizard_data.name|default:'' }}" placeholder="e.g. Thorin Ironhand" required>
       </div>
 
-      <!-- Race cards — list layout for better readability -->
-      <div class="mb-8">
-        <label class="block text-xs text-dm-muted uppercase tracking-widest mb-3">Race</label>
-        <div class="flex flex-col gap-2">
-
-          <button type="button" @click="selectedRace = 'HUMAN'"
-                  :class="selectedRace === 'HUMAN' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
-                  class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
-                 :class="selectedRace === 'HUMAN' ? 'bg-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">⚔</div>
-            <div>
-              <div class="font-semibold text-dm-text text-sm">Human</div>
-              <div class="text-xs text-dm-muted mt-0.5">Versatile and ambitious, excelling in any path they choose.</div>
-            </div>
-            <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
-                 :class="selectedRace === 'HUMAN' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
-              <svg x-show="selectedRace === 'HUMAN'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </button>
-
-          <button type="button" @click="selectedRace = 'ELF'"
-                  :class="selectedRace === 'ELF' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
-                  class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
-                 :class="selectedRace === 'ELF' ? 'bg-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">✦</div>
-            <div>
-              <div class="font-semibold text-dm-text text-sm">Elf</div>
-              <div class="text-xs text-dm-muted mt-0.5">Ancient and graceful, blessed with keen senses and magic affinity.</div>
-            </div>
-            <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
-                 :class="selectedRace === 'ELF' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
-              <svg x-show="selectedRace === 'ELF'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </button>
-
-          <button type="button" @click="selectedRace = 'DWARF'"
-                  :class="selectedRace === 'DWARF' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
-                  class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
-                 :class="selectedRace === 'DWARF' ? 'bg-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">⛏</div>
-            <div>
-              <div class="font-semibold text-dm-text text-sm">Dwarf</div>
-              <div class="text-xs text-dm-muted mt-0.5">Stout and resilient, forged in stone and known for unbreakable will.</div>
-            </div>
-            <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
-                 :class="selectedRace === 'DWARF' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
-              <svg x-show="selectedRace === 'DWARF'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </button>
-
-          <button type="button" @click="selectedRace = 'ORC'"
-                  :class="selectedRace === 'ORC' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
-                  class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
-                 :class="selectedRace === 'ORC' ? 'bg-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">🗡</div>
-            <div>
-              <div class="font-semibold text-dm-text text-sm">Orc</div>
-              <div class="text-xs text-dm-muted mt-0.5">Fierce and powerful, driven by primal strength and raw endurance.</div>
-            </div>
-            <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
-                 :class="selectedRace === 'ORC' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
-              <svg x-show="selectedRace === 'ORC'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </button>
-
-        </div>
-        <input type="hidden" name="race" :value="selectedRace">
+      <div class="opts">
+        <button type="button" class="opt" :class="selectedRace==='HUMAN' && 'sel'" @click="selectedRace='HUMAN'">
+          <span class="ic"><svg data-lucide="user-round"></svg></span>
+          <span><span class="t">Human</span><span class="d" style="display:block;">Versatile and ambitious — excels at any path.</span></span>
+          <span class="check"><svg data-lucide="check"></svg></span>
+        </button>
+        <button type="button" class="opt" :class="selectedRace==='ELF' && 'sel'" @click="selectedRace='ELF'">
+          <span class="ic"><svg data-lucide="leaf"></svg></span>
+          <span><span class="t">Elf</span><span class="d" style="display:block;">Ancient and graceful, keen of sense and magic.</span></span>
+          <span class="check"><svg data-lucide="check"></svg></span>
+        </button>
+        <button type="button" class="opt" :class="selectedRace==='DWARF' && 'sel'" @click="selectedRace='DWARF'">
+          <span class="ic"><svg data-lucide="hammer"></svg></span>
+          <span><span class="t">Dwarf</span><span class="d" style="display:block;">Stout and resilient, forged in stone.</span></span>
+          <span class="check"><svg data-lucide="check"></svg></span>
+        </button>
+        <button type="button" class="opt" :class="selectedRace==='ORC' && 'sel'" @click="selectedRace='ORC'">
+          <span class="ic"><svg data-lucide="axe"></svg></span>
+          <span><span class="t">Orc</span><span class="d" style="display:block;">Fierce and powerful, driven by raw strength.</span></span>
+          <span class="check"><svg data-lucide="check"></svg></span>
+        </button>
       </div>
 
-      <button type="submit"
-              :disabled="!selectedRace"
-              :class="selectedRace ? 'bg-dm-accent text-dm-bg hover:opacity-90 cursor-pointer' : 'bg-dm-surface text-dm-muted cursor-not-allowed border border-dm-muted/30'"
-              class="w-full py-3 rounded-xl font-semibold transition-all duration-150">
-        Continue to Class →
-      </button>
+      <input type="hidden" name="race" :value="selectedRace">
+
+      <div class="wnav">
+        <a class="btn btn-ghost" href="{% url 'game:dashboard' %}"><svg data-lucide="arrow-left" class="sm"></svg> Cancel</a>
+        <button type="submit" class="btn btn-primary" :disabled="!selectedRace">Continue to class <svg data-lucide="arrow-right" class="sm"></svg></button>
+      </div>
     </form>
 
   </div>
 </div>
-
 {% endblock %}

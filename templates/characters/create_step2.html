@@ -1,115 +1,91 @@
 {% extends "base.html" %}
 
-{% block title %}Create Character — Step 2 of 4{% endblock %}
+{% block title %}New hero · Class{% endblock %}
+
+{% block extra_head %}
+<style>
+  .wizpage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:46px 24px;position:relative;}
+  .wizpage::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 35% at 50% 0,rgba(217,131,68,.09),transparent 60%);}
+  .wiz{width:min(620px,100%);position:relative;z-index:1;}
+  .prog{margin-bottom:32px;}
+  .prog .steps{display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-3);margin-bottom:10px;}
+  .prog .steps b{color:var(--ember-2);font-weight:600;}
+  .prog .track{height:3px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
+  .prog .track i{display:block;height:100%;background:linear-gradient(90deg,var(--ember),var(--ember-2));border-radius:99px;transition:width .5s var(--ease);}
+  .wiz h1{font-family:'Newsreader',serif;font-size:28px;font-weight:500;margin-bottom:6px;}
+  .wiz .lead{color:var(--text-3);font-size:14.5px;margin-bottom:24px;}
+  .opts{display:flex;flex-direction:column;gap:10px;margin:0 0 18px;}
+  .opt{display:flex;align-items:center;gap:15px;padding:15px 17px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);cursor:pointer;transition:border-color .15s,background .15s,transform .12s;width:100%;text-align:left;font:inherit;color:inherit;}
+  .opt:hover{border-color:var(--line-2);transform:translateX(2px);}
+  .opt.sel{border-color:var(--ember);background:var(--ember-soft);}
+  .opt .ic{width:44px;height:44px;border-radius:11px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--text-2);flex:none;transition:color .15s;}
+  .opt.sel .ic{color:var(--ember-2);} .opt .ic svg{width:22px;height:22px;}
+  .opt .t{font-weight:600;font-size:15px;} .opt .d{font-size:13px;color:var(--text-3);margin-top:1px;display:block;}
+  .opt .st{margin-left:auto;text-align:right;font-size:11px;color:var(--text-3);flex:none;line-height:1.5;}
+  .opt .st b{color:var(--text-2);font-weight:600;}
+  .hpprev{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-2);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:26px;}
+  .hpprev svg{width:16px;height:16px;color:var(--ember-2);}
+  .hpprev b{color:var(--ember-2);font-variant-numeric:tabular-nums;}
+  .wnav{display:flex;justify-content:space-between;align-items:center;}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center py-12 px-4">
-  <div class="w-full max-w-xl" x-data="{ selectedClass: '{{ wizard_data.character_class|default:''|upper }}' }">
+<div class="wizpage">
+  <div class="wiz reveal" x-data="{
+        selectedClass: '{{ wizard_data.character_class|default:''|upper }}',
+        hp: { WARRIOR:16, CLERIC:14, ROGUE:12, WIZARD:10 },
+        ac: { WARRIOR:12, CLERIC:11, ROGUE:10, WIZARD:10 }
+      }">
 
-    <div class="mb-8">
-      <div class="flex justify-between text-xs text-dm-muted mb-2">
-        <span class="text-dm-accent font-semibold">Step 2 of 4</span>
-        <span>Class</span>
-      </div>
-      <div class="h-1 rounded-full bg-dm-surface">
-        <div class="h-1 rounded-full bg-dm-accent" style="width: 50%"></div>
-      </div>
+    <div class="prog">
+      <div class="steps"><span>1 · Name &amp; race</span><b>2 · Class</b><span>3 · Stats</span><span>4 · Review</span></div>
+      <div class="track"><i style="width:50%"></i></div>
     </div>
 
-    <h1 class="text-2xl font-bold text-dm-text mb-1">Choose your path</h1>
-    <p class="text-dm-muted text-sm mb-8">Your class defines how you fight, cast, and survive.</p>
+    <h1 class="serif">Choose your path</h1>
+    <p class="lead">Your class shapes how you fight, cast, and endure.</p>
 
     <form method="post" action="{% url 'characters:create_step2' %}">
       {% csrf_token %}
 
-      <div class="flex flex-col gap-2 mb-8">
-
-        <button type="button" @click="selectedClass = 'WARRIOR'"
-                :class="selectedClass === 'WARRIOR' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
-                class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
-               :class="selectedClass === 'WARRIOR' ? 'bg-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">🛡</div>
-          <div>
-            <div class="font-semibold text-dm-text text-sm">Warrior</div>
-            <div class="text-xs text-dm-muted mt-0.5">Frontline fighter in heavy armour. Strength-based — absorbs punishment so allies don't have to.</div>
-          </div>
-          <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
-               :class="selectedClass === 'WARRIOR' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
-            <svg x-show="selectedClass === 'WARRIOR'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
+      <div class="opts">
+        <button type="button" class="opt" :class="selectedClass==='WARRIOR' && 'sel'" @click="selectedClass='WARRIOR'">
+          <span class="ic"><svg data-lucide="swords"></svg></span>
+          <span><span class="t">Warrior</span><span class="d">Frontline fighter in heavy armor. Soaks punishment.</span></span>
+          <span class="st"><b>16</b> HP<br><b>12</b> AC</span>
         </button>
-
-        <button type="button" @click="selectedClass = 'WIZARD'"
-                :class="selectedClass === 'WIZARD' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
-                class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
-               :class="selectedClass === 'WIZARD' ? 'bg-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">✦</div>
-          <div>
-            <div class="font-semibold text-dm-text text-sm">Wizard</div>
-            <div class="text-xs text-dm-muted mt-0.5">Ranged spellcaster with low HP but devastating intelligence-based magic. Fragile and fearsome.</div>
-          </div>
-          <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
-               :class="selectedClass === 'WIZARD' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
-            <svg x-show="selectedClass === 'WIZARD'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
+        <button type="button" class="opt" :class="selectedClass==='CLERIC' && 'sel'" @click="selectedClass='CLERIC'">
+          <span class="ic"><svg data-lucide="cross"></svg></span>
+          <span><span class="t">Cleric</span><span class="d">Divine conduit. Heals, buffs, and holy strikes.</span></span>
+          <span class="st"><b>14</b> HP<br><b>11</b> AC</span>
         </button>
-
-        <button type="button" @click="selectedClass = 'ROGUE'"
-                :class="selectedClass === 'ROGUE' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
-                class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
-               :class="selectedClass === 'ROGUE' ? 'bg-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">🗡</div>
-          <div>
-            <div class="font-semibold text-dm-text text-sm">Rogue</div>
-            <div class="text-xs text-dm-muted mt-0.5">Agile and cunning striker. Dexterity-based — thrives on stealth, surprise attacks, and dirty tricks.</div>
-          </div>
-          <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
-               :class="selectedClass === 'ROGUE' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
-            <svg x-show="selectedClass === 'ROGUE'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
+        <button type="button" class="opt" :class="selectedClass==='ROGUE' && 'sel'" @click="selectedClass='ROGUE'">
+          <span class="ic"><svg data-lucide="venetian-mask"></svg></span>
+          <span><span class="t">Rogue</span><span class="d">Agile striker. Thrives on stealth and surprise.</span></span>
+          <span class="st"><b>12</b> HP<br><b>10</b> AC</span>
         </button>
-
-        <button type="button" @click="selectedClass = 'CLERIC'"
-                :class="selectedClass === 'CLERIC' ? 'border-dm-accent' : 'border-dm-muted/30 hover:border-dm-muted'"
-                class="flex items-center gap-4 p-4 rounded-xl border bg-dm-surface transition-colors duration-150 cursor-pointer text-left w-full">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-xl"
-               :class="selectedClass === 'CLERIC' ? 'border-dm-accent text-dm-bg' : 'bg-dm-bg text-dm-muted'">☩</div>
-          <div>
-            <div class="font-semibold text-dm-text text-sm">Cleric</div>
-            <div class="text-xs text-dm-muted mt-0.5">Divine conduit channelling godly power. Wisdom-based — blends healing, buffs, and holy combat.</div>
-          </div>
-          <div class="ml-auto shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center"
-               :class="selectedClass === 'CLERIC' ? 'border-dm-accent bg-dm-accent' : 'border-dm-muted/50'">
-            <svg x-show="selectedClass === 'CLERIC'" class="w-3 h-3 text-dm-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
+        <button type="button" class="opt" :class="selectedClass==='WIZARD' && 'sel'" @click="selectedClass='WIZARD'">
+          <span class="ic"><svg data-lucide="wand-sparkles"></svg></span>
+          <span><span class="t">Wizard</span><span class="d">Fragile but fearsome. Devastating arcane magic.</span></span>
+          <span class="st"><b>10</b> HP<br><b>10</b> AC</span>
         </button>
+      </div>
 
+      <div class="hpprev" x-show="selectedClass" x-cloak>
+        <svg data-lucide="heart"></svg>
+        <span>Starting vitals: <b x-text="hp[selectedClass]"></b> HP · <b x-text="ac[selectedClass]"></b> AC <span style="color:var(--text-3);">(before your Constitution &amp; Dexterity)</span></span>
       </div>
 
       <input type="hidden" name="character_class" :value="selectedClass">
 
-      <div class="flex justify-between items-center">
-        <a href="{% url 'characters:create_step1' %}"
-           class="text-dm-muted hover:text-dm-text text-sm transition-colors duration-150">
-          ← Back
-        </a>
-        <button type="submit"
-                :disabled="!selectedClass"
-                :class="selectedClass ? 'bg-dm-accent text-dm-bg hover:opacity-90 cursor-pointer' : 'bg-dm-surface text-dm-muted cursor-not-allowed border border-dm-muted/30'"
-                class="px-6 py-3 rounded-xl font-semibold transition-all duration-150">
-          Continue to Stats →
-        </button>
+      <div class="wnav">
+        <a class="btn btn-ghost" href="{% url 'characters:create_step1' %}"><svg data-lucide="arrow-left" class="sm"></svg> Back</a>
+        <button type="submit" class="btn btn-primary" :disabled="!selectedClass">Continue to stats <svg data-lucide="arrow-right" class="sm"></svg></button>
       </div>
     </form>
 
   </div>
 </div>
+<style>[x-cloak]{display:none!important;}</style>
 {% endblock %}
