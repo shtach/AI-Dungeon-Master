@@ -1,0 +1,20 @@
+{% comment %}
+  Death fragment (DEV-60 #16). Somber in-scene beat.
+  Death is final — leads to the session summary.
+{% endcomment %}
+<div class="summary-stub" style="animation:reveal .6s var(--ease) both;">
+  <span class="eyebrow" style="color:var(--wound);background:rgba(192,106,58,.1);border-color:rgba(192,106,58,.3);">
+    <svg data-lucide="skull"></svg> Fallen
+  </span>
+  <h2 class="serif" style="font-size:28px;">{{ session.character.name }} has fallen</h2>
+  <p style="color:var(--text-3);font-size:14px;max-width:380px;">
+    The cold reaches your heart and the world dims. Your tale ends here, but your legacy endures.
+  </p>
+  <a class="btn btn-primary" href="{% url 'legacy:session_summary' session.id %}">
+    View your legacy <svg data-lucide="arrow-right" class="sm"></svg>
+  </a>
+  <a class="btn btn-ghost" href="{% url 'game:dashboard' %}">
+    <svg data-lucide="layout-grid" class="sm"></svg> Back to your heroes
+  </a>
+</div>
+<script>if(window.lucide) lucide.createIcons();</script>

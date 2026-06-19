@@ -1,0 +1,17 @@
+{% comment %}
+  AI error fragment (DEV-60 #22). Recoverable toast/panel.
+  Pairs with DEV-42 recoverable error payload — never a raw 500.
+{% endcomment %}
+<div id="ai-error" style="background:var(--surface);border:1px solid rgba(192,106,58,.4);border-radius:var(--radius);padding:20px 22px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;max-width:420px;margin:20px auto;">
+  <div style="width:44px;height:44px;border-radius:12px;background:rgba(192,106,58,.12);display:flex;align-items:center;justify-content:center;">
+    <svg data-lucide="triangle-alert" style="width:22px;height:22px;color:var(--wound);"></svg>
+  </div>
+  <div style="font-family:'Newsreader',serif;font-size:18px;font-weight:500;color:var(--text);">The Dungeon Master hesitates…</div>
+  <div style="font-size:13.5px;color:var(--text-3);line-height:1.5;">Something went wrong, but your progress is safe. Try again.</div>
+  <button class="btn btn-primary" id="retry-btn" style="margin-top:4px;">
+    <svg data-lucide="rotate-ccw" class="sm"></svg> Try again
+  </button>
+</div>
+<script>
+  if(window.lucide) lucide.createIcons();
+</script>
