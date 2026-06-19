@@ -2,6 +2,7 @@ import json
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import F
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views import View
@@ -46,6 +47,9 @@ def _process_quests(session: GameSession, parsed: dict) -> None:
             )
             quest.status = Quest.Status.COMPLETED
             quest.save(update_fields=["status"])
+            GameSession.objects.filter(id=session.id).update(
+                quests_completed=F("quests_completed") + 1
+            )
         except (Quest.DoesNotExist, ValueError):
             pass
 
@@ -57,6 +61,11 @@ def _apply_hp_change(session: GameSession, hp_change: int | None) -> dict:
     character = session.character
     character.current_hp = max(0, min(character.max_hp, character.current_hp + hp_change))
     character.save(update_fields=["current_hp"])
+
+    if hp_change > 0:
+        GameSession.objects.filter(id=session.id).update(damage_dealt=F("damage_dealt") + hp_change)
+    elif hp_change < 0:
+        GameSession.objects.filter(id=session.id).update(damage_taken=F("damage_taken") + abs(hp_change))
 
     if character.current_hp == 0 and session.status == GameSession.StatusChoices.ACTIVE:
         session.status = GameSession.StatusChoices.DEAD
