@@ -1,6 +1,8 @@
 import random
 import re
 
+from django.db.models import F
+
 from ai_dungeon_master.apps.characters.stats import ability_mod, armor_class, to_hit
 from ai_dungeon_master.apps.game.combat.models import Enemy
 
@@ -33,6 +35,14 @@ def attack(character, weapon, enemy: Enemy) -> dict:
         enemy.status = Enemy.StatusChoices.DEAD
     enemy.save(update_fields=["current_hp", "status"])
 
+    from ai_dungeon_master.apps.game.models import GameSession
+    updates = {"damage_dealt": F("damage_dealt") + damage_total}
+    if enemy.current_hp == 0:
+        updates["kills"] = F("kills") + 1
+    GameSession.objects.filter(
+        character=character, status=GameSession.StatusChoices.ACTIVE
+    ).update(**updates)
+
     return {"roll": roll, "total": hit_total, "hit": True, "damage": damage_total, "enemy_hp": enemy.current_hp}
 
 
@@ -49,13 +59,15 @@ def enemy_turn(enemy: Enemy, character) -> dict:
     character.current_hp = max(0, character.current_hp - damage_total)
     character.save(update_fields=["current_hp"])
 
+    from ai_dungeon_master.apps.game.models import GameSession
+    GameSession.objects.filter(
+        character=character, status=GameSession.StatusChoices.ACTIVE
+    ).update(damage_taken=F("damage_taken") + damage_total)
+
     if character.current_hp == 0:
-        from ai_dungeon_master.apps.game.models import GameSession
         GameSession.objects.filter(
             character=character, status=GameSession.StatusChoices.ACTIVE
         ).update(status=GameSession.StatusChoices.DEAD)
-
-    return {"roll": roll, "total": hit_total, "hit": True, "damage": damage_total, "player_hp": character.current_hp}
 
     return {"roll": roll, "total": hit_total, "hit": True, "damage": damage_total, "player_hp": character.current_hp}
 
