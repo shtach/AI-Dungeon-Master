@@ -26,7 +26,7 @@ def _error_payload(message: str, status: int = 500) -> JsonResponse:
 
 def _filter_cards_by_inventory(cards: list, character: Character) -> list:
     inventory_names = set(
-        character.inventory.values_list("name", flat=True).values_list("name", flat=True)
+        character.inventory.values_list("name", flat=True)
     )
     return [c for c in cards if not c.get("requires") or c["requires"] in inventory_names]
 

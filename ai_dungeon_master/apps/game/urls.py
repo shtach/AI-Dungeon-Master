@@ -5,7 +5,7 @@ from . import turn_views
 app_name = "game"
 
 urlpatterns = [
-    path("", session_views.DashboardView.as_view(), name="dashboard"),
+    path("dashboard/", session_views.DashboardView.as_view(), name="dashboard"),
     path("session/new/", session_views.CreateSessionView.as_view(), name="create_session"),
     path("session/<int:session_id>/", session_views.GameSessionView.as_view(), name="session"),
     path("session/<int:session_id>/quests/", session_views.QuestLogView.as_view(), name="quest_log"),
