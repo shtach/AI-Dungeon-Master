@@ -65,9 +65,14 @@ def enemy_turn(enemy: Enemy, character) -> dict:
     ).update(damage_taken=F("damage_taken") + damage_total)
 
     if character.current_hp == 0:
-        GameSession.objects.filter(
+        from ai_dungeon_master.apps.legacy.models import SessionSummary
+        from ai_dungeon_master.apps.legacy.services import end_session
+
+        dead_session = GameSession.objects.filter(
             character=character, status=GameSession.StatusChoices.ACTIVE
-        ).update(status=GameSession.StatusChoices.DEAD)
+        ).first()
+        if dead_session and not hasattr(dead_session, "legacy_summary"):
+            end_session(dead_session, SessionSummary.VerdictChoices.DIED)
 
     return {"roll": roll, "total": hit_total, "hit": True, "damage": damage_total, "player_hp": character.current_hp}
 
